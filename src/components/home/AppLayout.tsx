@@ -111,7 +111,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, []);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-[#1a1a1c]">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
         <div
@@ -120,257 +120,232 @@ export function AppLayout({ children }: AppLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Modern Minimal Dark Theme */}
       <motion.aside
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className={`${isExpanded ? "w-64" : "w-16"
+        className={`${isExpanded ? "w-56" : "w-[60px]"
           } ${isSidebarOpen ? "flex" : "hidden md:flex"
-          } fixed md:relative z-50 md:z-auto h-full bg-card border-r border-border flex-col transition-all duration-300`}
+          } fixed md:relative z-50 md:z-auto h-full bg-[#0f0f10] flex-col transition-all duration-300 ease-in-out`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-        {/* Top area: hamburger on left, brand text with logo */}
-        <div className="p-3 border-b border-border flex items-center gap-2">
+        {/* Header - Logo and Toggle */}
+        <div className="h-14 flex items-center px-3 border-b border-gray-800/50">
           <button
             aria-label="Toggle sidebar"
-            className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent text-foreground transition-colors"
+            className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-gray-800/60 text-gray-400 transition-colors flex-shrink-0"
             onClick={() => {
               setIsSidebarOpen((v) => !v);
               startAutoHide();
             }}
           >
-            <Menu className="w-4 h-4" />
+            <Menu className="w-[18px] h-[18px]" />
           </button>
-          <button
-            onClick={() => {
-              setIsSidebarOpen((v) => !v);
-              startAutoHide();
-            }}
-            className="flex items-center gap-2 flex-1 min-w-0 hover:opacity-80 transition-opacity cursor-pointer"
-          >
-            {/* Text */}
-            <div className="flex flex-col min-w-0">
-              <h1 className="font-bold text-base bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                BioDocsAI
-              </h1>
-            </div>
-          </button>
+          <AnimatePresence>
+            {isExpanded && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="ml-2 font-semibold text-white text-sm whitespace-nowrap overflow-hidden"
+              >
+                MedQ AI
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Credits Display + Theme toggle */}
-        <div className="p-3 space-y-3">
-          {/* + New Button */}
+        {/* New Chat Button */}
+        <div className="px-2 py-3">
           <Link
             href="/dashboard"
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all font-medium text-sm"
+            className={`flex items-center justify-center gap-2 h-9 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition-all font-medium text-sm ${isExpanded ? 'px-4' : 'w-9 mx-auto'}`}
           >
-            <Plus className="w-4 h-4" />
-            <span className={`${isExpanded ? "block" : "hidden"}`}>New</span>
+            <Plus className="w-4 h-4 flex-shrink-0" />
+            {isExpanded && <span>New</span>}
           </Link>
-
-          {/* Credits Display - always visible with icon */}
-          <div className="pt-2">
-            <CreditsDisplay compact={!isExpanded} />
-          </div>
-
-          <div className={`${isExpanded ? "block" : "hidden"}`}>
-            <ThemeToggle />
-          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
-          <h3 className={cn(
-            "text-[10px] font-semibold uppercase mb-2 text-muted-foreground",
-            isExpanded ? "px-1" : "sr-only"
-          )}>
-            Main
-          </h3>
+        <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+          {/* Main Section */}
+          {isExpanded && (
+            <p className="text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider">Main</p>
+          )}
 
           <Link
             href="/dashboard"
             title="Home"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${pathname?.startsWith("/dashboard") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${pathname?.startsWith("/dashboard")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-sky-500/10 to-blue-500/10`}>
-              <Home className={`w-4 h-4 text-sky-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Home</p>
-            </div>
+            <Home className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Home</span>}
           </Link>
 
           <Link
             href="/cdss"
             title="Clinical Assistant"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/cdss") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/cdss")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-rose-500/10 to-orange-500/10`}>
-              <Stethoscope className={`w-4 h-4 text-rose-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Clinical Assistant</p>
-            </div>
+            <Stethoscope className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Clinical Assistant</span>}
           </Link>
 
           <Link
             href="/deep-research"
             title="Deep Research"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/deep-research") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/deep-research")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-emerald-500/10 to-teal-500/10`}>
-              <Microscope className={`w-4 h-4 text-emerald-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Deep Research</p>
-            </div>
+            <Microscope className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Deep Research</span>}
           </Link>
 
           <Link
             href="/discover"
             title="Discover"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/discover") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/discover")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-pink-500/10`}>
-              <Search className={`w-4 h-4 text-purple-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Discover</p>
-            </div>
+            <Search className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Discover</span>}
           </Link>
 
-          {/* Separator */}
-          <div className="my-3 border-t border-border" />
+          {/* Divider */}
+          <div className="!my-3 border-t border-gray-800/50" />
 
-          <h3 className={cn(
-            "text-[10px] font-semibold uppercase mb-2 text-muted-foreground",
-            isExpanded ? "px-1" : "sr-only"
-          )}>
-            Tools
-          </h3>
+          {/* Tools Section */}
+          {isExpanded && (
+            <p className="text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider">Tools</p>
+          )}
 
           <Link
             href="/research-paper"
             title="Research Paper"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/research-paper") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/research-paper")
+              ? "bg-gray-800 text-amber-400"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-pink-500/10`}>
-              <BookOpen className={`w-4 h-4 text-purple-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Research Paper</p>
-            </div>
+            <BookOpen className={`w-[18px] h-[18px] flex-shrink-0 ${isActive("/research-paper") ? 'text-amber-400' : 'text-amber-500'}`} />
+            {isExpanded && <span className="text-sm">Research Paper</span>}
           </Link>
 
           <Link
             href="/pdf-chat/dashboard"
             title="PDF Chat"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/pdf-chat") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/pdf-chat")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-blue-500/10`}>
-              <MessageSquare className={`w-4 h-4 text-cyan-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">PDF Chat</p>
-            </div>
+            <MessageSquare className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">PDF Chat</span>}
           </Link>
 
-          {/* Separator */}
-          <div className="my-3 border-t border-border" />
+          {/* Divider */}
+          <div className="!my-3 border-t border-gray-800/50" />
 
           <Link
             href="/pricing"
             title="Pricing"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/pricing") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/pricing")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-yellow-500/10 to-amber-500/10`}>
-              <CreditCard className={`w-4 h-4 text-yellow-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Pricing</p>
-            </div>
+            <CreditCard className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Pricing</span>}
           </Link>
 
           <Link
             href="/settings"
             title="Settings"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/settings") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-              }`}
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/settings")
+              ? "bg-gray-800 text-white"
+              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-slate-500/10 to-gray-500/10`}>
-              <Settings className={`w-4 h-4 text-slate-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Settings</p>
-            </div>
+            <Settings className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Settings</span>}
           </Link>
-
-
 
           {/* Admin Dashboard - Only visible to admins */}
           {user?.role === 'ADMIN' && (
             <>
-              <div className="my-3 border-t border-border" />
+              <div className="!my-3 border-t border-gray-800/50" />
               <Link
                 href="/admin"
                 title="Admin Dashboard"
-                className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/admin") ? "bg-orange-500/20 text-orange-600" : "hover:bg-orange-500/10 text-foreground"
-                  }`}
+                className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/admin")
+                  ? "bg-gray-800 text-orange-400"
+                  : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+                  } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
               >
-                <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-orange-500/10 to-red-500/10`}>
-                  <LayoutDashboard className={`w-4 h-4 text-orange-600`} />
-                </div>
-                <div className={`${isExpanded ? "block" : "hidden"}`}>
-                  <p className="text-sm font-medium">Admin</p>
-                </div>
+                <LayoutDashboard className={`w-[18px] h-[18px] flex-shrink-0 ${isActive("/admin") ? 'text-orange-400' : 'text-orange-500'}`} />
+                {isExpanded && <span className="text-sm">Admin</span>}
               </Link>
             </>
           )}
         </nav>
 
-        {/* User Profile */}
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-              <span className="text-sm font-semibold text-foreground">{userInitial}</span>
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"} flex-1`}
-            >
-              <p className="text-sm font-medium text-foreground">{userName}</p>
-              {/* email intentionally removed from header; keep hidden here as well */}
-            </div>
+        {/* Bottom Section - Credits & User */}
+        <div className="border-t border-gray-800/50">
+          {/* Credits Display */}
+          <div className="px-2 py-3">
+            <CreditsDisplay compact={!isExpanded} />
           </div>
-          <button
-            onClick={async () => {
-              const supabase = getBrowserSupabase();
-              await supabase.auth.signOut();
-              router.push('/');
-            }}
-            className={`w-full mt-2 text-sm flex items-center gap-2 justify-center transition-colors text-foreground hover:text-muted-foreground ${isExpanded ? "block" : "hidden"}`}
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Logout</span>
-          </button>
+
+          {/* User Profile */}
+          <div className="px-2 pb-3">
+            <div className={`flex items-center rounded-lg p-2 hover:bg-gray-800/50 transition-all cursor-pointer group ${isExpanded ? 'gap-3' : 'justify-center'}`}>
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-700 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-semibold text-white">{userInitial}</span>
+              </div>
+              {isExpanded && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{userName}</p>
+                </div>
+              )}
+            </div>
+            {isExpanded && (
+              <button
+                onClick={async () => {
+                  const supabase = getBrowserSupabase();
+                  await supabase.auth.signOut();
+                  router.push('/');
+                }}
+                className="w-full mt-1 h-9 text-sm flex items-center justify-center gap-2 rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-gray-800/50"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            )}
+          </div>
         </div>
       </motion.aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto relative pb-16 md:pb-0">
+      <main className="flex-1 overflow-y-auto relative pb-16 md:pb-0 flex flex-col items-center justify-center">
         {/* Top bar for small screens */}
-        <div className="h-12 border-b border-border flex items-center justify-between px-3 gap-2 md:hidden">
+        <div className="h-12 border-b border-gray-800 flex items-center justify-between px-3 gap-2 md:hidden bg-[#1a1a1c]">
           <div className="flex items-center gap-2">
             <button
               aria-label="Toggle sidebar"
-              className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent text-foreground transition-colors"
+              className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-gray-800 text-gray-400 transition-colors"
               onClick={() => {
                 setIsSidebarOpen((v) => !v);
                 startAutoHide();
@@ -378,16 +353,16 @@ export function AppLayout({ children }: AppLayoutProps) {
             >
               <Menu className="w-4 h-4" />
             </button>
-            <h1 className="font-bold text-base bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              BioDocsAI
+            <h1 className="font-bold text-base text-white">
+              MedQ AI
             </h1>
           </div>
           <button
             aria-label="User menu"
-            className="h-8 w-8 inline-flex items-center justify-center rounded-full bg-accent hover:bg-accent/80"
+            className="h-8 w-8 inline-flex items-center justify-center rounded-full bg-gray-700 hover:bg-gray-600"
             onClick={() => setIsMobileMenuOpen((v) => !v)}
           >
-            <span className="text-sm font-semibold">{userInitial}</span>
+            <span className="text-sm font-semibold text-white">{userInitial}</span>
           </button>
         </div>
 
@@ -410,17 +385,17 @@ export function AppLayout({ children }: AppLayoutProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-12 right-3 left-3 z-50 bg-card border border-border rounded-lg shadow-lg md:hidden"
+                className="fixed top-12 right-3 left-3 z-50 bg-[#2a2a2c] border border-gray-700 rounded-lg shadow-lg md:hidden"
               >
                 <div className="p-4 space-y-4">
                   {/* User Info */}
-                  <div className="flex items-center gap-3 pb-3 border-b border-border">
-                    <div className="w-12 h-12 bg-accent rounded-full flex items-center justify-center">
-                      <span className="text-lg font-semibold">{userInitial}</span>
+                  <div className="flex items-center gap-3 pb-3 border-b border-gray-700">
+                    <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
+                      <span className="text-lg font-semibold text-white">{userInitial}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{userName}</p>
-                      <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+                      <p className="text-sm font-medium truncate text-white">{userName}</p>
+                      <p className="text-xs text-gray-400 truncate">{userEmail}</p>
                     </div>
                   </div>
 
@@ -432,7 +407,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   {/* Theme Toggle */}
                   <button
                     onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 transition-colors text-gray-300"
                   >
                     {theme === "dark" ? (
                       <Sun className="h-5 w-5" />
@@ -447,7 +422,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   {/* Profile Link */}
                   <Link
                     href={user?.email ? `/user/${user.email}` : "/settings"}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-accent transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 transition-colors text-gray-300"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <UserIcon className="h-5 w-5" />
@@ -458,7 +433,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   {user?.role === 'ADMIN' && (
                     <Link
                       href="/admin"
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-orange-500/10 text-orange-600 transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-700 text-orange-400 transition-colors"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <LayoutDashboard className="h-5 w-5" />
@@ -474,7 +449,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       setIsMobileMenuOpen(false);
                       router.push('/auth/login');
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-red-900/30 text-red-400 transition-colors"
                   >
                     <LogOut className="h-5 w-5" />
                     <span className="text-sm">Logout</span>
@@ -488,49 +463,37 @@ export function AppLayout({ children }: AppLayoutProps) {
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/75">
-        <div className="grid grid-cols-7 h-14 text-xs">
-          <Link href="/discover" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Discover">
-            <Search className={`h-4 w-4 ${isActive("/discover") ? "text-purple-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/discover") ? "font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-foreground"}`}>Discover</span>
-            {isActive("/discover") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" />}
+      {/* Mobile Bottom Navigation - Dark Theme */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-800 bg-[#1a1a1c]/95 backdrop-blur supports-[backdrop-filter]:bg-[#1a1a1c]/75">
+        <div className="grid grid-cols-5 h-14 text-xs">
+          <Link href="/dashboard" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Home">
+            <Home className={`h-4 w-4 ${isActive("/dashboard") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/dashboard") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Home</span>
+            {isActive("/dashboard") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
-          <Link href="/presentation-builder" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Slide Composer">
-            <SlidersHorizontal className={`h-4 w-4 ${isActive("/presentation-builder") ? "text-emerald-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/presentation-builder") ? "font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent" : "text-foreground"}`}>Compose</span>
-            {isActive("/presentation-builder") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full" />}
+          <Link href="/deep-research" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Research">
+            <Microscope className={`h-4 w-4 ${isActive("/deep-research") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/deep-research") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Research</span>
+            {isActive("/deep-research") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
-          <Link href="/editor" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="AI Editor">
-            <Edit3 className={`h-4 w-4 ${isActive("/editor") ? "text-purple-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/editor") ? "font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-foreground"}`}>Editor</span>
-            {isActive("/editor") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" />}
+          <Link href="/cdss" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Clinical">
+            <Stethoscope className={`h-4 w-4 ${isActive("/cdss") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/cdss") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Clinical</span>
+            {isActive("/cdss") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
-          <Link href="/citation-generator" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Citation Generator">
-            <BookOpen className={`h-4 w-4 ${isActive("/citation-generator") ? "text-purple-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/citation-generator") ? "font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-foreground"}`}>Cite</span>
-            {isActive("/citation-generator") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" />}
-          </Link>
-
-          <Link href="/research-paper" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Research Paper">
-            <BookOpen className={`h-4 w-4 ${isActive("/research-paper") ? "text-purple-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/research-paper") ? "font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-foreground"}`}>Papers</span>
-            {isActive("/research-paper") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" />}
-          </Link>
-          <Link href="/deep-research" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Deep Research">
-            <Search className={`h-4 w-4 ${isActive("/deep-research") ? "text-purple-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/deep-research") ? "font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-foreground"}`}>Search</span>
-            {isActive("/deep-research") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" />}
+          <Link href="/research-paper" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Papers">
+            <BookOpen className={`h-4 w-4 ${isActive("/research-paper") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/research-paper") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Papers</span>
+            {isActive("/research-paper") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
           <Link href="/settings" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Settings">
-            <Settings className={`h-4 w-4 ${isActive("/settings") ? "text-purple-600" : "text-foreground"}`} />
-            <span className={`text-[9px] ${isActive("/settings") ? "font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-foreground"}`}>Settings</span>
-            {isActive("/settings") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full" />}
+            <Settings className={`h-4 w-4 ${isActive("/settings") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/settings") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Settings</span>
+            {isActive("/settings") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
         </div>
       </nav>
     </div>
   );
 }
-
 

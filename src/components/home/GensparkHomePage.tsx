@@ -1,98 +1,57 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   Search,
-  Send,
   Sparkles,
-  FileText,
   BookOpen,
   Microscope,
   MessageSquare,
   Stethoscope,
-  ChevronLeft,
-  ChevronRight,
   ArrowRight,
+  Paperclip,
+  Mic,
+  RotateCcw,
 } from "lucide-react";
 
-interface ForYouCard {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  gradient: string;
-  href: string;
-  category: string;
-}
-
-const forYouCards: ForYouCard[] = [
+// Tool configuration with neutral/dark styling
+const tools = [
   {
-    id: "cdss",
-    title: "AI Clinical Decision Support",
-    description: "Get real-time diagnostic assistance from specialist AI agents",
     icon: Stethoscope,
-    gradient: "from-blue-600 to-cyan-500",
+    label: "AI Clinical Decision Support",
     href: "/cdss",
-    category: "Clinical",
+    borderColor: "border-gray-600",
+    iconColor: "text-white"
   },
   {
-    id: "deep-research",
-    title: "Deep Research",
-    description: "Comprehensive multi-source research with citations",
     icon: Microscope,
-    gradient: "from-teal-600 to-emerald-500",
+    label: "Deep Research",
     href: "/deep-research",
-    category: "Research",
+    borderColor: "border-gray-600",
+    iconColor: "text-white"
   },
   {
-    id: "research-paper",
-    title: "Research Paper Writer",
-    description: "Write academic papers with proper citations",
     icon: BookOpen,
-    gradient: "from-indigo-600 to-blue-500",
+    label: "AI Docs",
     href: "/research-paper",
-    category: "Academic",
+    borderColor: "border-amber-700",
+    iconColor: "text-amber-400"
   },
   {
-    id: "pdf-chat",
-    title: "Chat with Documents",
-    description: "Upload PDFs and have AI conversations about them",
     icon: MessageSquare,
-    gradient: "from-sky-600 to-cyan-500",
+    label: "PDF Chat",
     href: "/pdf-chat/dashboard",
-    category: "Documents",
+    borderColor: "border-gray-600",
+    iconColor: "text-white"
   },
-];
-
-const trendingTopics = [
-  "Latest diabetes treatment guidelines",
-  "AI in radiology diagnosis",
-  "mRNA vaccine technology advances",
-  "Precision oncology updates",
-  "Antibiotic resistance research",
-  "Neuroimaging biomarkers",
 ];
 
 export function GensparkHomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const carouselRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll carousel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isAnimating) {
-        setCurrentCardIndex((prev) => (prev + 1) % (forYouCards.length - 3));
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [isAnimating]);
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
@@ -122,196 +81,118 @@ export function GensparkHomePage() {
     }
   };
 
-  const scrollCarousel = (direction: "left" | "right") => {
-    setIsAnimating(true);
-    if (direction === "left") {
-      setCurrentCardIndex((prev) => Math.max(0, prev - 1));
-    } else {
-      setCurrentCardIndex((prev) => Math.min(forYouCards.length - 4, prev + 1));
-    }
-    setTimeout(() => setIsAnimating(false), 500);
-  };
-
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-[#1a1a1c]">
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-12">
-          {/* Header - Modern Style */}
+      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto">
+        <div className="w-full max-w-3xl mx-auto px-4 md:px-8 py-8">
+          {/* Header Title */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-center mb-10"
+            className="text-center mb-12"
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground tracking-tight">
-              MedQ AI Doctors Cockpit
+            <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight flex items-center justify-center gap-2">
+              MedQ AI Workspace
+              <span className="w-2 h-2 rounded-full bg-teal-500 inline-block"></span>
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Your intelligent medical workspace for clinical support, research, and productivity.
-            </p>
           </motion.div>
 
-          {/* Search Bar - Modern Professional Style */}
+          {/* Search Bar - Genspark Style */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="max-w-3xl mx-auto mb-12"
+            className="max-w-2xl mx-auto mb-6"
           >
-            <div className={`relative bg-card transition-all duration-300 ${isSearchFocused ? 'shadow-2xl ring-2 ring-primary/20' : 'shadow-xl'} rounded-full border border-border/50`}>
-              <div className="flex items-center px-6 py-4">
-                <Search className={`w-5 h-5 mr-4 ${isSearchFocused ? 'text-primary' : 'text-muted-foreground'}`} />
+            <div className={`relative bg-[#2a2a2c] transition-all duration-300 ${isSearchFocused ? 'ring-1 ring-gray-500' : ''} rounded-2xl`}>
+              {/* Main Input Area */}
+              <div className="px-5 py-4">
                 <input
                   type="text"
-                  placeholder="Ask anything, create anything..."
+                  placeholder="Ask anything, create anything"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                   onKeyPress={handleKeyPress}
-                  className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-muted-foreground/70 text-lg"
+                  className="w-full bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-500 text-base"
                 />
-                <div className="flex items-center gap-2 pl-4 border-l border-border/50">
-                  <button className="p-2 hover:bg-accent rounded-full transition-colors" title="Attach file">
-                    <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </div>
+
+              {/* Bottom Action Bar */}
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700/50">
+                <div className="flex items-center gap-1">
+                  {/* Person/Profile Icon */}
+                  <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors" title="Profile">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </button>
+                  {/* Tools/Wrench Icon */}
+                  <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors" title="Tools">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {/* Attachment Icon */}
+                  <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors" title="Attach file">
+                    <Paperclip className="w-5 h-5 text-gray-400" />
+                  </button>
+                  {/* Mic Icon */}
+                  <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors" title="Voice input">
+                    <Mic className="w-5 h-5 text-gray-400" />
+                  </button>
+                  {/* History/Refresh Icon */}
+                  <button className="p-2 hover:bg-gray-700/50 rounded-lg transition-colors" title="History">
+                    <RotateCcw className="w-5 h-5 text-gray-400" />
+                  </button>
+                  {/* Submit Button */}
                   <button
                     onClick={handleSearch}
                     disabled={!searchQuery.trim()}
-                    className="p-2.5 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                    className="ml-2 p-2.5 bg-teal-600 text-white rounded-xl hover:bg-teal-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    <Sparkles className="w-5 h-5" />
                   </button>
                 </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Tool Icons Row - Genspark Style */}
+          {/* Tool Icons Row - Circular Dark Style */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-16"
+            className="mt-16"
           >
-            <div className="flex items-center justify-center gap-3 overflow-x-auto pb-4 px-4">
-              {[
-                { icon: Stethoscope, label: "AI Clinical Decision Support", href: "/cdss", gradient: "from-blue-600 to-cyan-500" },
-                { icon: Microscope, label: "Deep Research", href: "/deep-research", gradient: "from-teal-600 to-emerald-500" },
-                { icon: BookOpen, label: "AI Docs", href: "/research-paper", gradient: "from-indigo-600 to-blue-500" },
-                { icon: MessageSquare, label: "PDF Chat", href: "/pdf-chat/dashboard", gradient: "from-sky-600 to-cyan-500" },
-              ].map((tool, i) => (
+            <div className="flex items-center justify-center gap-6 md:gap-8 flex-wrap px-4">
+              {tools.map((tool, i) => (
                 <motion.div
                   key={tool.label}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 + i * 0.05 }}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex flex-col items-center gap-2 min-w-[100px] cursor-pointer group"
+                  whileHover={{ scale: 1.08 }}
+                  className="flex flex-col items-center gap-3 cursor-pointer group"
                   onClick={() => router.push(tool.href)}
                 >
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tool.gradient} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all`}>
-                    <tool.icon className="w-7 h-7 text-white" />
+                  {/* Circular Icon Container */}
+                  <div className={`w-14 h-14 rounded-full bg-[#2a2a2c] border-2 ${tool.borderColor} flex items-center justify-center group-hover:bg-[#3a3a3c] transition-all`}>
+                    <tool.icon className={`w-6 h-6 ${tool.iconColor}`} />
                   </div>
-                  <span className="text-xs text-center text-foreground font-medium line-clamp-2">
+                  {/* Label */}
+                  <span className="text-xs text-center text-gray-400 font-medium max-w-[80px] leading-tight group-hover:text-gray-300 transition-colors">
                     {tool.label}
                   </span>
                 </motion.div>
               ))}
-            </div>
-          </motion.div>
-
-          {/* For You Section - Genspark Style */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-12"
-          >
-            {/* Section Header with line */}
-            <div className="relative mb-8">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-6 py-2 bg-background text-sm font-medium text-foreground rounded-full border border-border">
-                  For You
-                </span>
-              </div>
-            </div>
-
-            {/* Carousel with navigation arrows */}
-            <div className="relative">
-              <div className="flex items-center gap-4">
-                {/* Left Arrow */}
-                <button
-                  onClick={() => scrollCarousel("left")}
-                  disabled={currentCardIndex === 0}
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-card border border-border hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-
-                {/* Cards Container */}
-                <div className="flex-1 overflow-hidden">
-                  <motion.div
-                    className="flex gap-6"
-                    animate={{ x: -currentCardIndex * (340 + 24) }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  >
-                    {forYouCards.map((card, index) => (
-                      <motion.div
-                        key={card.id}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 + index * 0.05 }}
-                        whileHover={{ y: -4 }}
-                        className="flex-shrink-0 w-[340px]"
-                      >
-                        <Link href={card.href}>
-                          <div className="relative h-[280px] bg-card rounded-2xl border border-border overflow-hidden group cursor-pointer hover:shadow-xl transition-all">
-                            {/* Gradient Background */}
-                            <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-90`} />
-
-                            {/* Content */}
-                            <div className="relative z-10 p-8 h-full flex flex-col text-white">
-                              {/* Category Badge */}
-                              <span className="text-xs font-semibold uppercase tracking-wider opacity-90 mb-6">
-                                {card.category}
-                              </span>
-
-                              {/* Icon */}
-                              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <card.icon className="w-8 h-8 text-white" />
-                              </div>
-
-                              {/* Title & Description */}
-                              <h3 className="text-2xl font-bold mb-3 leading-tight">
-                                {card.title}
-                              </h3>
-                              <p className="text-sm opacity-90 leading-relaxed">
-                                {card.description}
-                              </p>
-                            </div>
-                          </div>
-                        </Link>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </div>
-
-                {/* Right Arrow */}
-                <button
-                  onClick={() => scrollCarousel("right")}
-                  disabled={currentCardIndex >= forYouCards.length - 3}
-                  className="flex-shrink-0 w-10 h-10 rounded-full bg-card border border-border hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
             </div>
           </motion.div>
 
