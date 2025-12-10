@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Send, Loader2, Download, BookOpen } from "lucide-react";
+import { Search, Send, Loader2, Download, BookOpen, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProgressTracker } from "./ProgressTracker";
@@ -25,8 +25,18 @@ interface Task {
   progress: number;
 }
 
-export function DeepResearchDashboard() {
-  const [query, setQuery] = useState("");
+interface DeepResearchDashboardProps {
+  initialQuery?: string;
+  initialSources?: {
+    pubmed: boolean;
+    arxiv: boolean;
+    web: boolean;
+  };
+  onBack?: () => void;
+}
+
+export const DeepResearchDashboard = ({ initialQuery, initialSources, onBack }: DeepResearchDashboardProps) => {
+  const [query, setQuery] = useState(initialQuery || "");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isResearching, setIsResearching] = useState(false);
   const [generatedReport, setGeneratedReport] = useState<string | null>(null);
@@ -36,14 +46,14 @@ export function DeepResearchDashboard() {
   const [pmidCount, setPmidCount] = useState(0);
   const [savedFileId, setSavedFileId] = useState<string | null>(null); // Store file ID for updates
   const [hasAutoSaved, setHasAutoSaved] = useState(false); // Track if already auto-saved
-  
+
   // Source selection
   const [selectedSources, setSelectedSources] = useState({
     pubmed: true,
     arxiv: false,
     web: false
   });
-  
+
   // Progress tracking
   const [showProgress, setShowProgress] = useState(false);
   const [currentTopic, setCurrentTopic] = useState("");
@@ -55,7 +65,7 @@ export function DeepResearchDashboard() {
     { name: 'Content Generation', description: 'Generating comprehensive 8000+ word report', status: 'pending', progress: 0 },
     { name: 'Processing & Formatting', description: 'Structuring and formatting final report', status: 'pending', progress: 0 },
   ]);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasAutoStarted = useRef(false);
   const isSaving = useRef(false); // Track if save is in progress
@@ -71,6 +81,19 @@ export function DeepResearchDashboard() {
   // Auto-fill and start research from localStorage
   useEffect(() => {
     const storedQuery = localStorage.getItem('deepResearchQuery');
+
+    // Check for stored sources preference
+    const storedSources = localStorage.getItem('deepResearchSources');
+    if (storedSources) {
+      try {
+        const parsedSources = JSON.parse(storedSources);
+        setSelectedSources(parsedSources);
+        localStorage.removeItem('deepResearchSources');
+      } catch (e) {
+        console.error("Failed to parse stored sources", e);
+      }
+    }
+
     if (storedQuery && !hasAutoStarted.current) {
       setQuery(storedQuery);
       localStorage.removeItem('deepResearchQuery');
@@ -80,13 +103,27 @@ export function DeepResearchDashboard() {
         if (storedQuery.trim()) {
           setQuery("");
           setMessages([{ role: "user", content: storedQuery }]);
-          startResearch(storedQuery);
+          // Pass the freshly parsed sources if available, otherwise use current state (which might be stale in closure)
+          // Actually, we can just rely on the state update if we wait a tick, or pass explicitly.
+          // Since we are in the same effect, state update for selectedSources won't be reflected in 'selectedSources' variable yet.
+          // BUT startResearch uses selectedSources from state. 
+          // To fix this race condition, we should pass sources to startResearch or use a ref.
+          // For now, let's update state and rely on the fact that startResearch reads state. 
+          // Wait, startResearch reads 'selectedSources' from closure. It will be the initial state.
+          // We need to pass sources to startResearch.
+
+          let sourcesToUse = { pubmed: true, arxiv: false, web: false };
+          if (storedSources) {
+            try { sourcesToUse = JSON.parse(storedSources); } catch (e) { }
+          }
+
+          startResearch(storedQuery, sourcesToUse);
         }
       }, 500);
     }
   }, []);
 
-  const startResearch = async (userMessage: string) => {
+  const startResearch = async (userMessage: string, sourcesOverride?: typeof selectedSources) => {
     setIsResearching(true);
     setShowProgress(true);
     setCurrentTopic(userMessage);
@@ -94,17 +131,20 @@ export function DeepResearchDashboard() {
     setHasAutoSaved(false); // Reset auto-save flag for new research
     setSavedFileId(null); // Reset file ID for new research
     isSaving.current = false; // Reset saving flag
-    
+
     // Reset progress
     setOverallProgress(0);
     setCurrentPhase("Initializing research...");
+    // Use override if provided (for auto-start), otherwise use state
+    const currentSources = sourcesOverride || selectedSources;
+
     // Build dynamic task description based on selected sources
     const sourceNames: string[] = [];
-    if (selectedSources.pubmed) sourceNames.push('PubMed');
-    if (selectedSources.arxiv) sourceNames.push('arXiv');
-    if (selectedSources.web) sourceNames.push('Web');
+    if (currentSources.pubmed) sourceNames.push('PubMed');
+    if (currentSources.arxiv) sourceNames.push('arXiv');
+    if (currentSources.web) sourceNames.push('Web');
     const sourcesText = sourceNames.join(', ') || 'PubMed';
-    
+
     setTasks([
       { name: 'Topic Analysis', description: 'Analyzing topic and planning search strategy', status: 'pending', progress: 0 },
       { name: 'Literature Search', description: `Searching ${sourcesText} for 20+ articles`, status: 'pending', progress: 0 },
@@ -117,11 +157,11 @@ export function DeepResearchDashboard() {
       const response = await fetch("/api/deep-research/langchain-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           topic: userMessage,
           topK: 10,  // 10 papers per section for comprehensive research
           nSections: 5,  // 5 sections for thorough coverage
-          sources: selectedSources  // Pass selected sources
+          sources: currentSources  // Pass selected sources
         }),
       });
 
@@ -166,21 +206,21 @@ export function DeepResearchDashboard() {
               } else if (eventData.type === "progress") {
                 setCurrentPhase(eventData.message);
                 setOverallProgress(eventData.progress);
-                
+
                 // Update tasks based on progress
                 if (eventData.progress < 15) {
-                  setTasks(prev => prev.map((t, i) => 
+                  setTasks(prev => prev.map((t, i) =>
                     i === 0 ? { ...t, status: 'in-progress', progress: eventData.progress * 6 } : t
                   ));
                 } else if (eventData.progress < 85) {
-                  setTasks(prev => prev.map((t, i) => 
+                  setTasks(prev => prev.map((t, i) =>
                     i === 0 ? { ...t, status: 'completed', progress: 100 } :
-                    i === 1 ? { ...t, status: 'in-progress', progress: (eventData.progress - 15) * 1.4 } : t
+                      i === 1 ? { ...t, status: 'in-progress', progress: (eventData.progress - 15) * 1.4 } : t
                   ));
                 } else {
-                  setTasks(prev => prev.map((t, i) => 
+                  setTasks(prev => prev.map((t, i) =>
                     i === 0 || i === 1 ? { ...t, status: 'completed', progress: 100 } :
-                    i === 2 ? { ...t, status: 'in-progress', progress: (eventData.progress - 85) * 6 } : t
+                      i === 2 ? { ...t, status: 'in-progress', progress: (eventData.progress - 85) * 6 } : t
                   ));
                 }
               } else if (eventData.type === "metadata") {
@@ -212,11 +252,11 @@ export function DeepResearchDashboard() {
       if (!fullReport) {
         throw new Error("No markdown content received from stream");
       }
-      
+
       setGeneratedReport(fullReport);
       setWordCount(metadata?.wordCount || 0);
       setPmidCount(metadata?.paperCount || 0);
-      
+
       // Build sources from sections if available
       const allSources: ResearchSource[] = [];
       if (data && data.sections) {
@@ -231,7 +271,7 @@ export function DeepResearchDashboard() {
         });
         setSources(allSources);
       }
-      
+
       // Auto-save to files (only once, using ref to prevent race conditions)
       if (!hasAutoSaved && !isSaving.current) {
         isSaving.current = true; // Mark as saving immediately
@@ -248,13 +288,13 @@ export function DeepResearchDashboard() {
               title: userMessage || "Untitled Research",
             }),
           });
-          
+
           const saveData = await saveResponse.json();
           if (saveData.success && saveData.fileId) {
             setSavedFileId(saveData.fileId); // Store file ID for future updates
             console.log("✅ Deep research report auto-saved to files (ID:", saveData.fileId, ")");
           }
-          
+
           setHasAutoSaved(true); // Mark as saved
         } catch (error) {
           console.error("Error auto-saving report:", error);
@@ -263,15 +303,15 @@ export function DeepResearchDashboard() {
       } else {
         console.log("⏭️  Skipping auto-save (already saved or saving in progress)");
       }
-      
+
       // Hide progress after 2 seconds
       setTimeout(() => {
         setShowProgress(false);
       }, 2000);
     } catch (error) {
       console.error("Error:", error);
-      setMessages(prev => [...prev, { 
-        role: "assistant", 
+      setMessages(prev => [...prev, {
+        role: "assistant",
         content: "I apologize, but I'm having trouble conducting the research. Please try again."
       }]);
     } finally {
@@ -322,7 +362,7 @@ export function DeepResearchDashboard() {
           title: messages.find(m => m.role === "user")?.content || "Untitled Research",
         }),
       });
-      
+
       const saveData = await saveResponse.json();
       if (saveData.success && saveData.fileId && !savedFileId) {
         setSavedFileId(saveData.fileId); // Store file ID if this was first manual save
@@ -343,11 +383,22 @@ export function DeepResearchDashboard() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-6 py-12">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-12 relative"
         >
+          {onBack && (
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 hidden md:block">
+              <button
+                onClick={onBack}
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground bg-background/50 hover:bg-background/80 rounded-lg border border-border/50 transition-colors flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Search
+              </button>
+            </div>
+          )}
           <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-6">
             <BookOpen className="w-8 h-8 text-primary" />
           </div>
@@ -355,7 +406,7 @@ export function DeepResearchDashboard() {
             Deep Research Agent
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Conduct comprehensive multi-source research with autonomous agents. 
+            Conduct comprehensive multi-source research with autonomous agents.
             Access PubMed, arXiv, and web sources to generate evidence-based reports.
           </p>
         </motion.div>
@@ -380,7 +431,7 @@ export function DeepResearchDashboard() {
                     placeholder="What would you like to research today?"
                     className="flex-1 bg-transparent border-none outline-none text-lg h-14 text-foreground placeholder:text-muted-foreground/70"
                   />
-                  <Button 
+                  <Button
                     onClick={handleResearch}
                     disabled={!query.trim()}
                     size="lg"
@@ -395,11 +446,10 @@ export function DeepResearchDashboard() {
               <div className="flex flex-wrap justify-center gap-4 mb-12">
                 <button
                   onClick={() => setSelectedSources(prev => ({ ...prev, pubmed: !prev.pubmed }))}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-                    selectedSources.pubmed 
-                      ? "bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400" 
-                      : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${selectedSources.pubmed
+                    ? "bg-blue-500/10 border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                    }`}
                 >
                   <div className={`w-2 h-2 rounded-full ${selectedSources.pubmed ? "bg-blue-500" : "bg-muted-foreground"}`} />
                   <span className="font-medium">PubMed Central</span>
@@ -407,11 +457,10 @@ export function DeepResearchDashboard() {
 
                 <button
                   onClick={() => setSelectedSources(prev => ({ ...prev, arxiv: !prev.arxiv }))}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-                    selectedSources.arxiv 
-                      ? "bg-red-500/10 border-red-500 text-red-600 dark:text-red-400" 
-                      : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${selectedSources.arxiv
+                    ? "bg-red-500/10 border-red-500 text-red-600 dark:text-red-400"
+                    : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                    }`}
                 >
                   <div className={`w-2 h-2 rounded-full ${selectedSources.arxiv ? "bg-red-500" : "bg-muted-foreground"}`} />
                   <span className="font-medium">arXiv</span>
@@ -419,11 +468,10 @@ export function DeepResearchDashboard() {
 
                 <button
                   onClick={() => setSelectedSources(prev => ({ ...prev, web: !prev.web }))}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
-                    selectedSources.web 
-                      ? "bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400" 
-                      : "bg-background border-border text-muted-foreground hover:border-primary/50"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${selectedSources.web
+                    ? "bg-emerald-500/10 border-emerald-500 text-emerald-600 dark:text-emerald-400"
+                    : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                    }`}
                 >
                   <div className={`w-2 h-2 rounded-full ${selectedSources.web ? "bg-emerald-500" : "bg-muted-foreground"}`} />
                   <span className="font-medium">Web Search</span>
@@ -483,12 +531,12 @@ export function DeepResearchDashboard() {
                   savedFileId={savedFileId}
                 />
               )}
-              
+
               {/* Reset Button */}
               {!isResearching && generatedReport && (
                 <div className="flex justify-center pt-8">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setGeneratedReport(null);
                       setQuery("");
