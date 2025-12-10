@@ -1,0 +1,33 @@
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- DNA Helix Icon -->
+  <g transform="translate(5, 5)">
+    <!-- Double helix strands -->
+    <path d="M8 0C8 0 2 10 2 20C2 30 8 40 8 40" stroke="url(#gradientDark1)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M22 0C22 0 28 10 28 20C28 30 22 40 22 40" stroke="url(#gradientDark2)" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <!-- Connecting bars -->
+    <line x1="5" y1="8" x2="25" y2="8" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="16" x2="27" y2="16" stroke="#818CF8" stroke-width="2" stroke-linecap="round"/>
+    <line x1="3" y1="24" x2="27" y2="24" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"/>
+    <line x1="5" y1="32" x2="25" y2="32" stroke="#C084FC" stroke-width="2" stroke-linecap="round"/>
+    <!-- AI sparkle -->
+    <circle cx="28" cy="6" r="3" fill="#F472B6"/>
+    <circle cx="30" cy="4" r="1.5" fill="#FBBF24"/>
+  </g>
+  
+  <!-- Text (white for dark mode) -->
+  <text x="50" y="33" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700">
+    <tspan fill="#F8FAFC">Bio</tspan><tspan fill="#60A5FA">Docs</tspan><tspan fill="#A78BFA">.ai</tspan>
+  </text>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="gradientDark1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#60A5FA"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+    <linearGradient id="gradientDark2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="100%" stop-color="#F472B6"/>
+    </linearGradient>
+  </defs>
+</svg>

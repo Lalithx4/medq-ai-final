@@ -1,0 +1,16 @@
+# Docker build context excludes
+node_modules
+.next
+.pnpm-store
+.git
+.gitignore
+Dockerfile
+**/*.log
+.env
+.env.local
+.env.*
+.vscode
+.idea
+coverage
+build
+**/.DS_Store

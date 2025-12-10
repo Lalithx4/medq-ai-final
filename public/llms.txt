@@ -1,0 +1,125 @@
+# BioDocs.ai - AI-Powered Biomedical Research Platform
+
+> Transform your biomedical research with AI
+
+## About BioDocs.ai
+
+BioDocs.ai is an AI-powered platform designed for biomedical researchers, healthcare professionals, medical students, and academic writers. We provide intelligent tools to accelerate research, writing, and collaboration.
+
+Website: https://www.biodocs.ai
+Contact: support@biodocs.ai
+
+## Core Features
+
+### 1. AI Research Assistant
+Intelligent chat interface for research queries, document analysis, and literature exploration. Powered by advanced language models trained on biomedical literature.
+
+### 2. Presentation Builder
+Generate professional medical and scientific presentations with AI. Create slides for grand rounds, conferences, lectures, and CME sessions.
+
+### 3. Research Paper Writer
+AI-assisted academic paper writing with automatic citations, proper formatting, and structure guidance for journals and conferences.
+
+### 4. Citation Generator
+Access to 280M+ academic sources including PubMed, arXiv, and major journals. Automatic citation formatting in APA, MLA, Chicago, Vancouver, and more.
+
+### 5. AI Document Editor
+Advanced document editing with:
+- AI-powered paraphrasing
+- Smart autocomplete
+- Grammar and style suggestions
+- Medical terminology assistance
+
+### 6. Deep Research
+Comprehensive literature review and research synthesis from PubMed, arXiv, and other academic databases.
+
+### 7. Literature Review Generator
+Automated synthesis of research literature with proper citations and thematic organization.
+
+### 8. Manuscript Review
+AI-powered peer review simulation and feedback for manuscripts before submission.
+
+### 9. Personal Statement Builder
+Craft compelling personal statements for medical residency, fellowship, and graduate school applications.
+
+### 10. E-Poster Builder
+Transform research abstracts into conference-ready electronic posters with professional layouts.
+
+### 11. IRB Builder
+Generate draft IRB (Institutional Review Board) and ethics protocols for research studies.
+
+### 12. Chat with Documents
+Upload PDFs and interact with them using AI. Extract insights, summarize content, and ask questions about your documents.
+
+### 13. Video Meetings
+HIPAA-ready video conferencing for:
+- Telemedicine consultations
+- Grand rounds presentations
+- CME sessions
+- Research collaborations
+- Tele-proctoring
+
+### 14. File Manager
+Secure document storage and organization for all your research materials.
+
+## Use Cases
+
+### Medical Professionals
+- Create presentations for grand rounds and conferences
+- Generate patient education materials
+- Conduct literature reviews for clinical decisions
+- Collaborate with colleagues via secure video
+
+### Researchers
+- Write and format research papers
+- Find and manage citations
+- Conduct systematic literature reviews
+- Prepare IRB protocols
+
+### Medical Students
+- Study with AI-powered document analysis
+- Create presentations for rotations
+- Write personal statements for residency
+- Prepare for board exams
+
+### Academic Writers
+- Paraphrase and improve writing
+- Generate citations automatically
+- Review manuscripts before submission
+- Create conference posters
+
+## Data & Privacy
+
+- HIPAA-ready infrastructure for healthcare data
+- SOC 2 compliant cloud hosting
+- End-to-end encryption
+- GDPR and CCPA compliant
+- No selling of user data
+
+Privacy Policy: https://www.biodocs.ai/privacy
+Terms of Service: https://www.biodocs.ai/terms
+
+## Technical Information
+
+- Built with Next.js and React
+- Server-side rendering for SEO
+- AI powered by OpenAI, Google AI, and Cerebras
+- Real-time collaboration features
+- Mobile-responsive design
+
+## Pricing
+
+- Free tier available with usage limits
+- Premium plans for individuals and teams
+- Enterprise solutions for institutions
+
+## Contact
+
+- Website: https://www.biodocs.ai
+- Support: support@biodocs.ai
+- Privacy: privacy@biodocs.ai
+- Legal: legal@biodocs.ai
+
+---
+
+© 2024 BioDocs.ai. All rights reserved.

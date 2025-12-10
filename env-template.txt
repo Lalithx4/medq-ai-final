@@ -1,0 +1,132 @@
+# Copy this to your .env file and fill in the values
+
+# ============================================
+# REQUIRED CONFIGURATION
+# ============================================
+
+# 1. SUPABASE - Get from https://supabase.com (FREE!)
+#    This is your PRIMARY database and storage
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_ANON_KEY="your-anon-key-here"
+
+# 2. DATABASE - Use Supabase PostgreSQL connection string
+#    Get from: Supabase Dashboard > Settings > Database > Connection String (Direct)
+DATABASE_URL="postgresql://postgres.xxxxx:password@aws-0-region.pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.xxxxx:password@aws-0-region.pooler.supabase.com:5432/postgres"
+
+# 3. NEXTAUTH - Generate with: openssl rand -base64 32
+NEXTAUTH_SECRET="your_generated_secret_here"
+NEXTAUTH_URL="http://localhost:3000"
+
+# 4. GOOGLE OAUTH - Get from https://console.cloud.google.com/apis/credentials
+#    Redirect URI: http://localhost:3000/api/auth/callback/google
+GOOGLE_CLIENT_ID="your_google_client_id.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="your_google_client_secret"
+
+# 5. AI PROVIDERS
+# Cerebras - For chat (https://cerebras.ai) - FAST & CHEAP!
+CEREBRAS_API_KEY="csk-your-cerebras-key"
+CEREBRAS_MODEL="llama3.1-8b"
+
+# Google AI - For Gemini fallback and File Search (https://aistudio.google.com/apikey)
+GOOGLE_AI_API_KEY="your-google-ai-api-key"
+
+# OpenAI - For advanced features (https://platform.openai.com/api-keys)
+OPENAI_API_KEY="sk-your_openai_api_key_here"
+
+# 6. UPLOADTHING - For file uploads (https://uploadthing.com)
+UPLOADTHING_TOKEN="your-uploadthing-token"
+
+# ============================================
+# RAG SYSTEM CONFIGURATION
+# ============================================
+
+# RAG Mode: "self-hosted" or "gemini"
+# - self-hosted: Uses Railway backend with PubMedBERT embeddings (high memory, medical-specific)
+# - gemini: Uses Google Gemini File Search API (low memory, cost-optimized)
+# Default: "self-hosted"
+RAG_MODE="self-hosted"
+
+# RAG Backend URL (only needed for self-hosted mode)
+RAG_BACKEND_URL="https://your-railway-backend.railway.app"
+
+# ============================================
+# OPTIONAL CONFIGURATION (can add later)
+# ============================================
+
+# Together AI - For AI image generation (https://api.together.xyz)
+TOGETHER_AI_API_KEY=""
+
+# Unsplash - For stock images (https://unsplash.com/developers)
+UNSPLASH_ACCESS_KEY=""
+
+# Tavily - For web search (https://tavily.com)
+TAVILY_API_KEY=""
+
+# ============================================
+# CREDIT SYSTEM CONFIGURATION
+# ============================================
+
+# Enable/Disable Credit System (true/false)
+# Set to "false" to disable credit checks and deductions
+# Default: "true"
+ENABLE_CREDIT_SYSTEM="true"
+
+# ============================================
+# QUICK START GUIDE
+# ============================================
+#
+# 1. Get a FREE database:
+#    → Go to https://neon.tech
+#    → Sign up (no credit card needed)
+#    → Create a project
+#    → Copy the connection string
+#    → Paste it in DATABASE_URL above
+#
+# 2. Get OpenAI API key:
+#    → Go to https://platform.openai.com/api-keys
+#    → Create new secret key
+#    → Copy and paste in OPENAI_API_KEY above
+#
+# 3. Set up Google OAuth:
+#    → Go to https://console.cloud.google.com/apis/credentials
+#    → Create OAuth 2.0 Client ID
+#    → Add redirect URI: http://localhost:3000/api/auth/callback/google
+#    → Copy Client ID and Secret
+#
+# 4. Generate NextAuth Secret:
+#    → Run in terminal: openssl rand -base64 32
+#    → Or use: https://generate-secret.vercel.app/32
+#    → Copy and paste in NEXTAUTH_SECRET above
+#
+# 5. After configuring, run:
+#    → pnpm db:push
+#    → pnpm dev
+#
+# ============================================
+
+# ============================================
+# VIDEO STREAMING (MIROTALK SFU)
+# ============================================
+# Self-hosted MiroTalk SFU instance
+MIROTALK_API_URL="https://video.biodocs.ai/api/v1"
+MIROTALK_API_SECRET="your-mirotalk-api-secret"
+MIROTALK_BASE_URL="https://video.biodocs.ai"
+
+# ============================================
+# VIDEO STREAMING (AGORA) - DEPRECATED
+# ============================================
+# Get from https://console.agora.io
+# AGORA_APP_ID="your-agora-app-id"
+# AGORA_APP_CERTIFICATE="your-agora-app-certificate"
+
+# ============================================
+# WASABI STORAGE (S3-Compatible)
+# ============================================
+# Get from https://console.wasabisys.com
+# Files are stored in: users/{userId}/files/{year}/{month}/{filename}
+WASABI_ACCESS_KEY_ID="your-wasabi-access-key"
+WASABI_SECRET_ACCESS_KEY="your-wasabi-secret-key"
+WASABI_BUCKET_NAME="your-bucket-name"
+WASABI_REGION="ap-south-1"
+WASABI_ENDPOINT="https://s3.ap-south-1.wasabisys.com"

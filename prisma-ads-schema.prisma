@@ -1,0 +1,109 @@
+// =====================================================
+// Sponsored Ads Models for BioDocs.ai
+// Add these models to your existing schema.prisma file
+// =====================================================
+
+// Ad Campaign - Created by admins/sponsors
+model AdCampaign {
+  id              String          @id @default(uuid()) @db.Uuid
+  sponsorName     String          @map("sponsor_name")
+  sponsorLogo     String?         @map("sponsor_logo")
+  message         String?
+  url             String
+  ctaText         String          @default("Learn More") @map("cta_text")
+  
+  // Targeting criteria (stored as JSON for flexibility)
+  targeting       Json?           // { specialties: [], locations: [], roomTypes: [], userIds: [] }
+  
+  // Campaign schedule
+  startDate       DateTime        @map("start_date")
+  endDate         DateTime        @map("end_date")
+  
+  // Budget & billing
+  budget          Float           @default(0)
+  spent           Float           @default(0)
+  costPerImpression Float         @default(0) @map("cost_per_impression")
+  costPerClick    Float           @default(0) @map("cost_per_click")
+  
+  // Stats (denormalized for quick access)
+  impressions     Int             @default(0)
+  clicks          Int             @default(0)
+  
+  // Status
+  active          Boolean         @default(true)
+  approved        Boolean         @default(false) // Admin approval required
+  
+  // Audit
+  createdBy       String?         @map("created_by")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  
+  // Relations
+  AdImpressions   AdImpression[]
+
+  @@index([active, startDate, endDate])
+  @@index([sponsorName])
+  @@index([createdAt])
+  @@map("ad_campaigns")
+}
+
+// Ad Impression - Tracks when an ad is shown
+model AdImpression {
+  id              String        @id @default(uuid()) @db.Uuid
+  campaignId      String        @map("campaign_id") @db.Uuid
+  
+  // Context
+  roomId          String?       @map("room_id")
+  userId          String?       @map("user_id")
+  
+  // User context for analytics (optional, for targeting analysis)
+  userSpecialty   String?       @map("user_specialty")
+  userLocation    String?       @map("user_location")
+  roomType        String?       @map("room_type")
+  
+  // Tracking
+  clicked         Boolean       @default(false)
+  clickedAt       DateTime?     @map("clicked_at")
+  dismissed       Boolean       @default(false)
+  dismissedAt     DateTime?     @map("dismissed_at")
+  
+  // Technical
+  userAgent       String?       @map("user_agent")
+  ipAddress       String?       @map("ip_address")
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+  
+  // Relations
+  AdCampaign      AdCampaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([userId])
+  @@index([roomId])
+  @@index([createdAt])
+  @@index([clicked])
+  @@map("ad_impressions")
+}
+
+// Optional: Sponsor accounts for self-service ad management
+model AdSponsor {
+  id              String        @id @default(uuid()) @db.Uuid
+  companyName     String        @map("company_name")
+  contactEmail    String        @unique @map("contact_email")
+  contactName     String?       @map("contact_name")
+  logoUrl         String?       @map("logo_url")
+  website         String?
+  
+  // Billing
+  balance         Float         @default(0)
+  
+  // Status
+  verified        Boolean       @default(false)
+  active          Boolean       @default(true)
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@index([contactEmail])
+  @@index([companyName])
+  @@map("ad_sponsors")
+}

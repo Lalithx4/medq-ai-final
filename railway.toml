@@ -1,0 +1,39 @@
+# Railway deployment configuration
+# Docs: https://docs.railway.app/guides/railway-toml
+
+# We use the Dockerfile in the repo for build & run.
+# This file adds envs and a post-deploy hook to run Prisma migrations.
+
+[build]
+# Ensure Next.js build skips strict env validation inside Docker build
+[build.env]
+SKIP_ENV_VALIDATION = "1"
+
+[deploy]
+# Rely on Dockerfile CMD for start; just set a healthcheck and post-deploy steps
+healthcheckPath = "/"
+healthcheckTimeout = 60
+numReplicas = 1
+restartPolicyType = "ON_FAILURE"
+
+# Post-deploy hook: conditionally baseline (first deploy only), then deploy migrations
+# Toggle baselining by setting PRISMA_BASELINE=1 in Railway Variables for a single deploy.
+# On subsequent deploys, unset PRISMA_BASELINE or set it to 0.
+postDeployCommand = "sh -c 'if [ \"$PRISMA_BASELINE\" = \"1\" ]; then sh scripts/db-baseline.sh; fi; sh scripts/db-deploy.sh'"
+
+[service]
+name = "web"
+# PORT is provided by Railway; Dockerfile already honors it
+
+# --- Variables you must set in Railway (Project → Variables) ---
+# SUPABASE_URL = "..."
+# SUPABASE_ANON_KEY = "..."
+# DATABASE_URL = "postgresql://..."      # URL-encode special characters in password
+# DIRECT_URL = "postgresql://..."         # optional: for Prisma direct connection
+# NEXTAUTH_URL = "https://<your-app>.railway.app"
+# NEXT_PUBLIC_APP_URL = "https://<your-app>.railway.app"
+# PAYPAL_ENV = "sandbox"|"production"
+# PAYPAL_CLIENT_ID = "..."
+# PAYPAL_CLIENT_SECRET = "..."
+# (optional) STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+# (optional) PRISMA_BASELINE = "1"  # only for the first deploy if DB already has tables

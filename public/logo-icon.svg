@@ -1,0 +1,28 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- DNA Helix Icon -->
+  <g transform="translate(4, 4)">
+    <!-- Double helix strands -->
+    <path d="M10 0C10 0 2 10 2 20C2 30 10 40 10 40" stroke="url(#iconGrad1)" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M30 0C30 0 38 10 38 20C38 30 30 40 30 40" stroke="url(#iconGrad2)" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <!-- Connecting bars -->
+    <line x1="6" y1="8" x2="34" y2="8" stroke="#60A5FA" stroke-width="3" stroke-linecap="round"/>
+    <line x1="4" y1="16" x2="36" y2="16" stroke="#818CF8" stroke-width="3" stroke-linecap="round"/>
+    <line x1="4" y1="24" x2="36" y2="24" stroke="#A78BFA" stroke-width="3" stroke-linecap="round"/>
+    <line x1="6" y1="32" x2="34" y2="32" stroke="#C084FC" stroke-width="3" stroke-linecap="round"/>
+    <!-- AI sparkles -->
+    <circle cx="36" cy="6" r="4" fill="#F472B6"/>
+    <circle cx="39" cy="3" r="2" fill="#FBBF24"/>
+  </g>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="iconGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="iconGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+  </defs>
+</svg>
