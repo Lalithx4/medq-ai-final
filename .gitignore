@@ -48,5 +48,12 @@ python_backend/venv/
 __pycache__/
 *.pyc
 *.pyo
+
+# Supabase backups (contain secrets)
+supabase_backup*/
+
+# Environment example files with secrets
+src/.env.example
+.env.example
 *.pyd
 .Python
