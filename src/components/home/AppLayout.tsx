@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, BookOpen, History, Home, LogOut, Menu, Settings, User as UserIcon, Moon, Sun, Edit3, MessageSquare, SlidersHorizontal, Sparkles, Video, LayoutDashboard, Users, Stethoscope, Plus, FolderOpen, Brain, Microscope } from "lucide-react";
+import { FileText, BookOpen, History, LogOut, Menu, Settings, User as UserIcon, Moon, Sun, Edit3, MessageSquare, SlidersHorizontal, Sparkles, Video, LayoutDashboard, Users, Stethoscope, Plus, FolderOpen, Brain, Microscope, ChevronDown, ChevronRight, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -16,6 +16,31 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
+interface ChatHistoryItem {
+  id: string;
+  title: string | null;
+  context: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Helper to format timestamp relative to now
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+}
 
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
@@ -25,10 +50,17 @@ export function AppLayout({ children }: AppLayoutProps) {
   // Default to false on mobile, true on desktop
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<{ email?: string; name?: string; role?: string } | null>(null);
   const autoHideRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Collapsible sections state
+  const [isToolsCollapsed, setIsToolsCollapsed] = useState(false);
+  const [isMainCollapsed, setIsMainCollapsed] = useState(false);
+
+  // Chat history state
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
   // Set sidebar open by default on desktop only
   useEffect(() => {
@@ -61,13 +93,34 @@ export function AppLayout({ children }: AppLayoutProps) {
     fetchUser();
   }, []);
 
+  // Fetch chat history
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      try {
+        setIsHistoryLoading(true);
+        const res = await fetch('/api/chat');
+        if (res.ok) {
+          const data = await res.json();
+          setChatHistory(data.conversations || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch chat history:', error);
+      } finally {
+        setIsHistoryLoading(false);
+      }
+    };
+
+    fetchChatHistory();
+  }, []);
+
   const userEmail = user?.email || "user@example.com";
   const userName = user?.name || user?.email?.split('@')[0] || "User";
   const userInitial = userName.charAt(0).toUpperCase();
 
   const isActive = (path: string) => {
+    if (path === "/chat" && pathname?.startsWith("/chat")) return true;
     if (path === "/dashboard" && pathname?.startsWith("/dashboard")) return true;
-    if (path !== "/dashboard" && pathname?.startsWith(path)) return true;
+    if (path !== "/chat" && path !== "/dashboard" && pathname?.startsWith(path)) return true;
     return false;
   };
 
@@ -161,77 +214,108 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* New Chat Button */}
         <div className="px-2 py-3">
           <Link
-            href="/dashboard"
+            href="/chat"
             className={`flex items-center justify-center gap-2 h-9 bg-teal-600 text-white rounded-lg hover:bg-teal-500 transition-all font-medium text-sm ${isExpanded ? 'px-4' : 'w-9 mx-auto'}`}
           >
             <Plus className="w-4 h-4 flex-shrink-0" />
-            {isExpanded && <span>New</span>}
+            {isExpanded && <span>New Chat</span>}
           </Link>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
-          {/* Main Section */}
+          {/* Main Section - Collapsible */}
           {isExpanded && (
-            <p className="text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider">Main</p>
+            <button
+              onClick={() => setIsMainCollapsed(!isMainCollapsed)}
+              className="w-full flex items-center justify-between text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider hover:text-gray-400 transition-colors"
+            >
+              <span>Main</span>
+              {isMainCollapsed ? (
+                <ChevronRight className="w-3 h-3" />
+              ) : (
+                <ChevronDown className="w-3 h-3" />
+              )}
+            </button>
           )}
 
-          <Link
-            href="/dashboard"
-            title="Home"
-            className={`flex items-center h-10 rounded-lg transition-all group ${pathname?.startsWith("/dashboard")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <Home className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Home</span>}
-          </Link>
-
-          <Link
-            href="/cdss"
-            title="Clinical Assistant"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/cdss")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <Stethoscope className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Clinical Assistant</span>}
-          </Link>
-
+          <AnimatePresence>
+            {!isMainCollapsed && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-1 overflow-hidden"
+              >
+                <Link
+                  href="/cdss"
+                  title="Clinical Assistant"
+                  className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/cdss")
+                    ? "bg-gray-800 text-white"
+                    : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+                    } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
+                >
+                  <Stethoscope className="w-[18px] h-[18px] flex-shrink-0" />
+                  {isExpanded && <span className="text-sm">Clinical Assistant</span>}
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Divider */}
           <div className="!my-3 border-t border-gray-800/50" />
 
-          {/* Tools Section */}
+          {/* Tools Section - Collapsible */}
           {isExpanded && (
-            <p className="text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider">Tools</p>
+            <button
+              onClick={() => setIsToolsCollapsed(!isToolsCollapsed)}
+              className="w-full flex items-center justify-between text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider hover:text-gray-400 transition-colors"
+            >
+              <span>Tools</span>
+              {isToolsCollapsed ? (
+                <ChevronRight className="w-3 h-3" />
+              ) : (
+                <ChevronDown className="w-3 h-3" />
+              )}
+            </button>
           )}
 
-          <Link
-            href="/deep-research"
-            title="Deep Research"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/deep-research")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <Microscope className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Deep Research</span>}
-          </Link>
+          <AnimatePresence>
+            {!isToolsCollapsed && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-1 overflow-hidden"
+              >
+                <Link
+                  href="/deep-research"
+                  title="Deep Research"
+                  className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/deep-research")
+                    ? "bg-gray-800 text-white"
+                    : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+                    } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
+                >
+                  <Microscope className="w-[18px] h-[18px] flex-shrink-0" />
+                  {isExpanded && <span className="text-sm">Deep Research</span>}
+                </Link>
 
-          <Link
-            href="/pdf-chat/dashboard"
-            title="PDF Chat"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/pdf-chat")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <MessageSquare className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">PDF Chat</span>}
-          </Link>
+                <Link
+                  href="/pdf-chat/dashboard"
+                  title="PDF Chat"
+                  className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/pdf-chat")
+                    ? "bg-gray-800 text-white"
+                    : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
+                    } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
+                >
+                  <MessageSquare className="w-[18px] h-[18px] flex-shrink-0" />
+                  {isExpanded && <span className="text-sm">PDF Chat</span>}
+                </Link>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Admin Dashboard - Only visible to admins */}
           {user?.role === 'ADMIN' && (
@@ -250,6 +334,50 @@ export function AppLayout({ children }: AppLayoutProps) {
                 {isExpanded && <span className="text-sm">Admin</span>}
               </Link>
             </>
+          )}
+
+          {/* Divider before History */}
+          <div className="!my-3 border-t border-gray-800/50" />
+
+          {/* History Section */}
+          {isExpanded && (
+            <p className="text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              <span>History</span>
+            </p>
+          )}
+
+          {!isExpanded && (
+            <div className="flex justify-center py-2">
+              <Clock className="w-[18px] h-[18px] text-gray-500" />
+            </div>
+          )}
+
+          {isExpanded && (
+            <div className="space-y-0.5">
+              {isHistoryLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                </div>
+              ) : chatHistory.length === 0 ? (
+                <p className="text-[11px] text-gray-600 px-3 py-2">No chat history yet</p>
+              ) : (
+                chatHistory.slice(0, 10).map((chat) => (
+                  <Link
+                    key={chat.id}
+                    href={`/chat/${chat.id}`}
+                    className="flex items-start px-3 py-2 rounded-lg hover:bg-gray-800/50 text-gray-400 hover:text-gray-200 transition-all group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate group-hover:text-gray-200">
+                        {chat.title || "Untitled conversation"}
+                      </p>
+                      <p className="text-[10px] text-gray-600">{formatRelativeTime(chat.updatedAt)}</p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
           )}
         </nav>
 
@@ -421,10 +549,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile Bottom Navigation - Dark Theme */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-800 bg-[#1a1a1c]/95 backdrop-blur supports-[backdrop-filter]:bg-[#1a1a1c]/75">
         <div className="grid grid-cols-4 h-14 text-xs">
-          <Link href="/dashboard" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Home">
-            <Home className={`h-4 w-4 ${isActive("/dashboard") ? "text-teal-400" : "text-gray-400"}`} />
-            <span className={`text-[9px] ${isActive("/dashboard") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Home</span>
-            {isActive("/dashboard") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
+          <Link href="/chat" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Chat">
+            <Plus className={`h-4 w-4 ${isActive("/chat") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/chat") ? "font-semibold text-teal-400" : "text-gray-400"}`}>New Chat</span>
+            {isActive("/chat") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
           <Link href="/deep-research" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Research">
             <Microscope className={`h-4 w-4 ${isActive("/deep-research") ? "text-teal-400" : "text-gray-400"}`} />
@@ -447,4 +575,3 @@ export function AppLayout({ children }: AppLayoutProps) {
     </div>
   );
 }
-
