@@ -1,6 +1,6 @@
-import TanStackQueryProvider from "@/provider/TanstackProvider";
-import AuthProvider from "@/provider/AuthProvider";
-import { ThemeProvider } from "@/provider/theme-provider";
+import TanStackQueryProvider from "@/providers/TanstackProvider";
+import AuthProvider from "@/providers/AuthProvider";
+import { ThemeProvider } from "@/providers/theme-provider";
 import { CreditsProvider } from "@/contexts/CreditsContext";
 import "@/styles/globals.css";
 import { type Metadata } from "next";

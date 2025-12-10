@@ -5,8 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getBrowserSupabase } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/provider/theme-provider';
-import { useAuth } from '@/provider/AuthProvider';
+import { ThemeToggle } from '@/providers/theme-provider';
+import { useAuth } from '@/providers/AuthProvider';
 import {
   LayoutDashboard,
   Users,
@@ -89,7 +89,7 @@ export default function AdminLayout({
     // Only run access check once auth state is known
     const run = async () => {
       console.log('[ADMIN LAYOUT] Auth state:', { authLoading, authUser });
-      
+
       if (authLoading) {
         console.log('[ADMIN LAYOUT] Still loading auth state...');
         return;
@@ -98,12 +98,12 @@ export default function AdminLayout({
       // No authenticated user: try to get session directly as fallback
       if (!authUser) {
         console.log('[ADMIN LAYOUT] No authUser from context, trying direct session check...');
-        
+
         // Try direct session check as fallback
         const supabase = getBrowserSupabase();
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('[ADMIN LAYOUT] Direct session check:', { session: !!session, error });
-        
+
         if (session?.user) {
           console.log('[ADMIN LAYOUT] Found session via direct check, proceeding with user:', session.user.email);
           // Continue with the session user
@@ -112,7 +112,7 @@ export default function AdminLayout({
             .select('id, email, name, image, role')
             .eq('id', session.user.id)
             .single();
-          
+
           if (profile && profile.role === 'ADMIN') {
             setUser(profile);
             setIsLoading(false);
@@ -123,7 +123,7 @@ export default function AdminLayout({
             return;
           }
         }
-        
+
         setUser(null);
         setIsLoading(false);
         return;

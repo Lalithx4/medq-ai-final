@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePresentationState } from "@/states/presentation-state";
 import {
   Search,
   Send,
@@ -14,20 +13,9 @@ import {
   Microscope,
   MessageSquare,
   Stethoscope,
-  GraduationCap,
-  Video,
-  Users,
   ChevronLeft,
   ChevronRight,
-  Plus,
   ArrowRight,
-  Zap,
-  Brain,
-  FlaskConical,
-  Globe,
-  TrendingUp,
-  Clock,
-  Star,
 } from "lucide-react";
 
 interface ForYouCard {
@@ -60,15 +48,6 @@ const forYouCards: ForYouCard[] = [
     category: "Research",
   },
   {
-    id: "presentation",
-    title: "AI Presentations",
-    description: "Generate professional medical slides in minutes",
-    icon: GraduationCap,
-    gradient: "from-slate-700 to-slate-500",
-    href: "/presentation-builder",
-    category: "Productivity",
-  },
-  {
     id: "research-paper",
     title: "Research Paper Writer",
     description: "Write academic papers with proper citations",
@@ -86,33 +65,6 @@ const forYouCards: ForYouCard[] = [
     href: "/pdf-chat/dashboard",
     category: "Documents",
   },
-  {
-    id: "video",
-    title: "Video Meetings",
-    description: "HIPAA-ready video conferencing for healthcare",
-    icon: Video,
-    gradient: "from-blue-700 to-indigo-600",
-    href: "/video-streaming",
-    category: "Collaboration",
-  },
-  {
-    id: "groups",
-    title: "Study Groups",
-    description: "Collaborate with peers in real-time",
-    icon: Users,
-    gradient: "from-teal-500 to-cyan-600",
-    href: "/groups",
-    category: "Collaboration",
-  },
-  {
-    id: "editor",
-    title: "AI Document Editor",
-    description: "Write with AI-powered autocomplete and citations",
-    icon: FileText,
-    gradient: "from-slate-600 to-gray-500",
-    href: "/editor",
-    category: "Productivity",
-  },
 ];
 
 const trendingTopics = [
@@ -126,7 +78,6 @@ const trendingTopics = [
 
 export function GensparkHomePage() {
   const router = useRouter();
-  const { setPresentationInput } = usePresentationState();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
@@ -147,14 +98,6 @@ export function GensparkHomePage() {
     if (!searchQuery.trim()) return;
 
     const lower = searchQuery.toLowerCase();
-
-    // Detect intents
-    if (/(generate|create|make)\s+(a\s+)?(ppt|powerpoint|presentation)/i.test(lower)) {
-      const topic = searchQuery.replace(/^.*?(ppt|powerpoint|presentation)\s*/i, "").trim() || "Medical Topic";
-      setPresentationInput(topic);
-      router.push("/presentation-builder");
-      return;
-    }
 
     if (/(deep\s+research|comprehensive\s+research)/i.test(lower)) {
       localStorage.setItem("deepResearchQuery", searchQuery);
@@ -257,13 +200,9 @@ export function GensparkHomePage() {
             <div className="flex items-center justify-center gap-3 overflow-x-auto pb-4 px-4">
               {[
                 { icon: Stethoscope, label: "AI Clinical Decision Support", href: "/cdss", gradient: "from-blue-600 to-cyan-500" },
-                { icon: GraduationCap, label: "AI Slides", href: "/presentation-builder", gradient: "from-slate-700 to-slate-500" },
-                { icon: FileText, label: "AI Docs", href: "/research-paper", gradient: "from-indigo-600 to-blue-500" },
-                { icon: MessageSquare, label: "AI Chat", href: "/pdf-chat/dashboard", gradient: "from-sky-600 to-cyan-500" },
                 { icon: Microscope, label: "Deep Research", href: "/deep-research", gradient: "from-teal-600 to-emerald-500" },
-                { icon: Brain, label: "AI Designer", href: "/editor", gradient: "from-slate-600 to-gray-500" },
-                { icon: Users, label: "AI Groups", href: "/groups", gradient: "from-teal-500 to-cyan-600" },
-                { icon: Video, label: "AI Video", href: "/video-streaming", gradient: "from-blue-700 to-indigo-600" },
+                { icon: BookOpen, label: "AI Docs", href: "/research-paper", gradient: "from-indigo-600 to-blue-500" },
+                { icon: MessageSquare, label: "PDF Chat", href: "/pdf-chat/dashboard", gradient: "from-sky-600 to-cyan-500" },
               ].map((tool, i) => (
                 <motion.div
                   key={tool.label}
@@ -336,19 +275,19 @@ export function GensparkHomePage() {
                           <div className="relative h-[280px] bg-card rounded-2xl border border-border overflow-hidden group cursor-pointer hover:shadow-xl transition-all">
                             {/* Gradient Background */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-90`} />
-                            
+
                             {/* Content */}
                             <div className="relative z-10 p-8 h-full flex flex-col text-white">
                               {/* Category Badge */}
                               <span className="text-xs font-semibold uppercase tracking-wider opacity-90 mb-6">
                                 {card.category}
                               </span>
-                              
+
                               {/* Icon */}
                               <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                                 <card.icon className="w-8 h-8 text-white" />
                               </div>
-                              
+
                               {/* Title & Description */}
                               <h3 className="text-2xl font-bold mb-3 leading-tight">
                                 {card.title}

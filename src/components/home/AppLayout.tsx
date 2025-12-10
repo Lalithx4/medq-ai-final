@@ -5,10 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { fetchPresentations } from "@/app/_actions/presentation/fetchPresentations";
 import { getBrowserSupabase } from "@/lib/supabase/client";
-import { ThemeToggle } from "@/provider/theme-provider";
+import { ThemeToggle } from "@/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditsDisplay } from "@/components/credits/CreditsDisplay";
@@ -17,39 +15,6 @@ import { useTheme } from "next-themes";
 interface AppLayoutProps {
   children: ReactNode;
 }
-
-function RecentSessionsPanel() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["recent-presentations", 1],
-    queryFn: async () => fetchPresentations(0),
-  });
-
-  const items = data?.items ?? [];
-
-  return (
-    <div className="p-2">
-      {isLoading && (
-        <div className="text-xs text-muted-foreground p-2">Loading…</div>
-      )}
-      {!isLoading && items.length === 0 && (
-        <div className="text-xs text-muted-foreground p-2">No recent presentations</div>
-      )}
-      <div className="flex flex-col">
-        {items.slice(0, 10).map((doc) => (
-          <Link
-            key={doc.id}
-            href={`/presentation/${doc.id}`}
-            className="px-2 py-2 text-sm text-foreground hover:bg-accent flex items-center gap-2"
-          >
-            <History className="w-3.5 h-3.5" />
-            <span className="truncate">{doc.title ?? "Untitled Presentation"}</span>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 
 
 export function AppLayout({ children }: AppLayoutProps) {
@@ -70,13 +35,13 @@ export function AppLayout({ children }: AppLayoutProps) {
     const isDesktop = window.innerWidth >= 768; // md breakpoint
     setIsSidebarOpen(isDesktop);
   }, []);
-  
+
   // Get user from Supabase with role
   useEffect(() => {
     const fetchUser = async () => {
       const supabase = getBrowserSupabase();
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      
+
       if (authUser) {
         // Fetch user profile with role from database
         const { data: profile } = await supabase
@@ -84,7 +49,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           .select('role')
           .eq('id', authUser.id)
           .single();
-        
+
         setUser({
           email: authUser.email,
           name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
@@ -92,10 +57,10 @@ export function AppLayout({ children }: AppLayoutProps) {
         });
       }
     };
-    
+
     fetchUser();
   }, []);
-  
+
   const userEmail = user?.email || "user@example.com";
   const userName = user?.name || user?.email?.split('@')[0] || "User";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -149,22 +114,20 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="flex h-screen bg-background">
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <motion.aside
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.3 }}
-        className={`${
-          isExpanded ? "w-64" : "w-16"
-        } ${
-          isSidebarOpen ? "flex" : "hidden md:flex"
-        } fixed md:relative z-50 md:z-auto h-full bg-card border-r border-border flex-col transition-all duration-300`}
+        className={`${isExpanded ? "w-64" : "w-16"
+          } ${isSidebarOpen ? "flex" : "hidden md:flex"
+          } fixed md:relative z-50 md:z-auto h-full bg-card border-r border-border flex-col transition-all duration-300`}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
@@ -180,7 +143,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           >
             <Menu className="w-4 h-4" />
           </button>
-          <button 
+          <button
             onClick={() => {
               setIsSidebarOpen((v) => !v);
               startAutoHide();
@@ -206,12 +169,12 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Plus className="w-4 h-4" />
             <span className={`${isExpanded ? "block" : "hidden"}`}>New</span>
           </Link>
-          
+
           {/* Credits Display - always visible with icon */}
           <div className="pt-2">
             <CreditsDisplay compact={!isExpanded} />
           </div>
-          
+
           <div className={`${isExpanded ? "block" : "hidden"}`}>
             <ThemeToggle />
           </div>
@@ -229,9 +192,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link
             href="/dashboard"
             title="Home"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              pathname?.startsWith("/dashboard") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${pathname?.startsWith("/dashboard") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-sky-500/10 to-blue-500/10`}>
               <Home className={`w-4 h-4 text-sky-600`} />
@@ -244,9 +206,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link
             href="/cdss"
             title="Clinical Assistant"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/cdss") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/cdss") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-rose-500/10 to-orange-500/10`}>
               <Stethoscope className={`w-4 h-4 text-rose-600`} />
@@ -259,9 +220,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link
             href="/deep-research"
             title="Deep Research"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/deep-research") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/deep-research") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-emerald-500/10 to-teal-500/10`}>
               <Microscope className={`w-4 h-4 text-emerald-600`} />
@@ -274,9 +234,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link
             href="/discover"
             title="Discover"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/discover") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/discover") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-pink-500/10`}>
               <Search className={`w-4 h-4 text-purple-600`} />
@@ -288,7 +247,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Separator */}
           <div className="my-3 border-t border-border" />
-          
+
           <h3 className={cn(
             "text-[10px] font-semibold uppercase mb-2 text-muted-foreground",
             isExpanded ? "px-1" : "sr-only"
@@ -297,26 +256,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           </h3>
 
           <Link
-            href="/presentation-builder"
-            title="Presentations"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/presentation-builder") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
-          >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-indigo-500/10`}>
-              <SlidersHorizontal className={`w-4 h-4 text-blue-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Presentations</p>
-            </div>
-          </Link>
-
-          <Link
             href="/research-paper"
             title="Research Paper"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/research-paper") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/research-paper") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-purple-500/10 to-pink-500/10`}>
               <BookOpen className={`w-4 h-4 text-purple-600`} />
@@ -327,26 +270,10 @@ export function AppLayout({ children }: AppLayoutProps) {
           </Link>
 
           <Link
-            href="/editor"
-            title="Editor"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/editor") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
-          >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-orange-500/10 to-amber-500/10`}>
-              <Edit3 className={`w-4 h-4 text-orange-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Editor</p>
-            </div>
-          </Link>
-
-          <Link
             href="/pdf-chat/dashboard"
             title="PDF Chat"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/pdf-chat") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/pdf-chat") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-blue-500/10`}>
               <MessageSquare className={`w-4 h-4 text-cyan-600`} />
@@ -358,68 +285,12 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* Separator */}
           <div className="my-3 border-t border-border" />
-          
-          <h3 className={cn(
-            "text-[10px] font-semibold uppercase mb-2 text-muted-foreground",
-            isExpanded ? "px-1" : "sr-only"
-          )}>
-            Workspace
-          </h3>
-
-          <Link
-            href="/files"
-            title="AI File Manager"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/files") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
-          >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10`}>
-              <FolderOpen className={`w-4 h-4 text-amber-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">AI File Manager</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/groups"
-            title="Groups"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/groups") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
-          >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-violet-500/10 to-purple-500/10`}>
-              <Users className={`w-4 h-4 text-violet-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Groups</p>
-            </div>
-          </Link>
-
-          <Link
-            href="/video-streaming"
-            title="Video Meetings"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/video-streaming") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
-          >
-            <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-red-500/10 to-rose-500/10`}>
-              <Video className={`w-4 h-4 text-red-600`} />
-            </div>
-            <div className={`${isExpanded ? "block" : "hidden"}`}>
-              <p className="text-sm font-medium">Video Meetings</p>
-            </div>
-          </Link>
-
-          {/* Separator */}
-          <div className="my-3 border-t border-border" />
 
           <Link
             href="/pricing"
             title="Pricing"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/pricing") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/pricing") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-yellow-500/10 to-amber-500/10`}>
               <CreditCard className={`w-4 h-4 text-yellow-600`} />
@@ -432,9 +303,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Link
             href="/settings"
             title="Settings"
-            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-              isActive("/settings") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
-            }`}
+            className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/settings") ? "bg-primary/10 text-primary" : "hover:bg-accent text-foreground"
+              }`}
           >
             <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-slate-500/10 to-gray-500/10`}>
               <Settings className={`w-4 h-4 text-slate-600`} />
@@ -453,9 +323,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               <Link
                 href="/admin"
                 title="Admin Dashboard"
-                className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${
-                  isActive("/admin") ? "bg-orange-500/20 text-orange-600" : "hover:bg-orange-500/10 text-foreground"
-                }`}
+                className={`flex items-center gap-3 px-2 py-2 rounded-md transition-all ${isActive("/admin") ? "bg-orange-500/20 text-orange-600" : "hover:bg-orange-500/10 text-foreground"
+                  }`}
               >
                 <div className={`w-8 h-8 rounded-md flex items-center justify-center bg-gradient-to-br from-orange-500/10 to-red-500/10`}>
                   <LayoutDashboard className={`w-4 h-4 text-orange-600`} />
@@ -534,7 +403,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="fixed inset-0 bg-black/50 z-50 md:hidden"
                 onClick={() => setIsMobileMenuOpen(false)}
               />
-              
+
               {/* Menu Panel */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}

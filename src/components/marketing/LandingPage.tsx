@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Brain, Stethoscope, Pill, Dna, TestTube, Activity, ShieldCheck, FileText, Zap, Sparkles, GraduationCap, Microscope, BookOpenText, Code2, BookOpen, RefreshCw, Search, ClipboardCheck, Video, Users, MessageSquare, FolderOpen, Radio, Palette, Lock, Award, Presentation, MonitorPlay, UserCheck, Globe, Mic, Camera, ScreenShare, Hand } from "lucide-react";
-import { useAuth } from "@/provider/AuthProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { FloatingParticles } from "@/components/ui/floating-particles";
 
@@ -21,17 +21,17 @@ export default function LandingPage() {
         setIsAdmin(false);
         return;
       }
-      
+
       const supabase = getBrowserSupabase();
       const { data: profile } = await supabase
         .from('User')
         .select('role')
         .eq('id', user.id)
         .single();
-      
+
       setIsAdmin(profile?.role === 'ADMIN');
     };
-    
+
     checkAdminRole();
   }, [user]);
 
@@ -42,7 +42,7 @@ export default function LandingPage() {
       const supabase = getBrowserSupabase();
       await supabase.auth.signOut();
       router.replace("/");
-    } catch {}
+    } catch { }
   };
   // Animation variants
   const fadeUp = {
@@ -61,7 +61,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-background/70 text-foreground relative">
       {/* Floating Particles Background */}
       <FloatingParticles count={80} />
-      
+
       {/* Navbar */}
       <header className="sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-background/70 bg-background/60 border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -197,8 +197,8 @@ export default function LandingPage() {
               )}
             </motion.div>
             <motion.div variants={fadeUp} className="mt-6 flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4"/>HIPAA-ready workflows</div>
-              <div className="flex items-center gap-2"><Zap className="h-4 w-4"/>Optimized for mobile</div>
+              <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4" />HIPAA-ready workflows</div>
+              <div className="flex items-center gap-2"><Zap className="h-4 w-4" />Optimized for mobile</div>
             </motion.div>
           </motion.div>
 
@@ -216,33 +216,33 @@ export default function LandingPage() {
                   { icon: Code2, title: "AI code editor", desc: "Edit with inline citations", gradient: "from-orange-500/20 to-red-500/20", iconColor: "text-orange-500", href: "/editor" },
                 ].map((feature, index) => (
                   <Link href={feature.href} key={feature.title}>
-                  <motion.div 
-                    className="relative rounded-xl border border-border p-4 bg-background/80 hover:bg-background transition-all cursor-pointer group overflow-hidden"
-                    variants={pop}
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {/* Gradient Background */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                    
-                    {/* Content */}
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-2 text-sm font-semibold mb-3 group-hover:text-primary transition-colors">
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${feature.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                          <feature.icon className={`h-4 w-4 ${feature.iconColor}`} />
-                        </div>
-                        {feature.title}
-                      </div>
-                      <div className="h-24 rounded-lg bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-center text-xs text-muted-foreground font-medium px-2 text-center group-hover:from-primary/10 transition-colors">
-                        {feature.desc}
-                      </div>
-                    </div>
+                    <motion.div
+                      className="relative rounded-xl border border-border p-4 bg-background/80 hover:bg-background transition-all cursor-pointer group overflow-hidden"
+                      variants={pop}
+                      whileHover={{ scale: 1.05, y: -4 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {/* Gradient Background */}
+                      <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-                    {/* Sparkle Effect */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-                    </div>
-                  </motion.div>
+                      {/* Content */}
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 text-sm font-semibold mb-3 group-hover:text-primary transition-colors">
+                          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${feature.gradient} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                            <feature.icon className={`h-4 w-4 ${feature.iconColor}`} />
+                          </div>
+                          {feature.title}
+                        </div>
+                        <div className="h-24 rounded-lg bg-gradient-to-br from-primary/5 to-transparent flex items-center justify-center text-xs text-muted-foreground font-medium px-2 text-center group-hover:from-primary/10 transition-colors">
+                          {feature.desc}
+                        </div>
+                      </div>
+
+                      {/* Sparkle Effect */}
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                      </div>
+                    </motion.div>
                   </Link>
                 ))}
               </div>
@@ -269,32 +269,32 @@ export default function LandingPage() {
             { icon: Code2, title: "AI Document Editor", desc: "Edit and refactor documents with inline citation helpers and AI assistance.", gradient: "from-orange-500/10 to-red-500/10", iconColor: "text-orange-500", href: "/editor" },
           ].map(({ icon: Icon, title, desc, badge, gradient, iconColor, href }) => (
             <Link href={href} key={title}>
-            <motion.div className="relative rounded-2xl border border-border bg-card p-6 hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer group overflow-hidden h-full"
-              variants={pop} whileHover={{ y: -8, scale: 1.02 }}>
-              {/* Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              
-              {/* Badge */}
-              {badge && (
-                <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-bold z-10">
-                  {badge}
-                </div>
-              )}
-              
-              {/* Content */}
-              <div className="relative z-10">
-                <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${gradient} grid place-items-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-6 w-6 ${iconColor}`} />
-                </div>
-                <h3 className="font-bold mb-2 group-hover:text-primary transition-colors">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
+              <motion.div className="relative rounded-2xl border border-border bg-card p-6 hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer group overflow-hidden h-full"
+                variants={pop} whileHover={{ y: -8, scale: 1.02 }}>
+                {/* Gradient Background */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-              {/* Sparkle Effect on Hover */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-              </div>
-            </motion.div>
+                {/* Badge */}
+                {badge && (
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded-full bg-primary/20 text-primary text-[10px] font-bold z-10">
+                    {badge}
+                  </div>
+                )}
+
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${gradient} grid place-items-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className={`h-6 w-6 ${iconColor}`} />
+                  </div>
+                  <h3 className="font-bold mb-2 group-hover:text-primary transition-colors">{title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+
+                {/* Sparkle Effect on Hover */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                </div>
+              </motion.div>
             </Link>
           ))}
         </motion.div>
@@ -314,24 +314,24 @@ export default function LandingPage() {
             { icon: Search, title: "Deep research", desc: "Comprehensive literature synthesis with PubMed.", gradient: "from-violet-500/10 to-purple-500/10", iconColor: "text-violet-500", href: "/deep-research" },
           ].map(({ icon: Icon, title, desc, gradient, iconColor, href }) => (
             <Link href={href} key={title}>
-            <motion.div className="relative rounded-2xl border border-border p-5 bg-card hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer group overflow-hidden h-full" variants={pop} whileHover={{ y: -6, scale: 1.02 }}>
-              {/* Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              
-              {/* Content */}
-              <div className="relative z-10">
-                <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${gradient} grid place-items-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-5 w-5 ${iconColor}`} />
-                </div>
-                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
+              <motion.div className="relative rounded-2xl border border-border p-5 bg-card hover:shadow-xl hover:border-primary/50 transition-all cursor-pointer group overflow-hidden h-full" variants={pop} whileHover={{ y: -6, scale: 1.02 }}>
+                {/* Gradient Background */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-              {/* Sparkle Effect on Hover */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Sparkles className="w-3 h-3 text-primary animate-pulse" />
-              </div>
-            </motion.div>
+                {/* Content */}
+                <div className="relative z-10">
+                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${gradient} grid place-items-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className={`h-5 w-5 ${iconColor}`} />
+                  </div>
+                  <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">{title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
+
+                {/* Sparkle Effect on Hover */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                </div>
+              </motion.div>
             </Link>
           ))}
         </motion.div>
@@ -360,7 +360,7 @@ export default function LandingPage() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -378,7 +378,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-              Host CME sessions, grand rounds, case discussions, and telemedicine consultations with enterprise-grade security. 
+              Host CME sessions, grand rounds, case discussions, and telemedicine consultations with enterprise-grade security.
               Designed specifically for medical students, residents, and practicing physicians.
             </p>
           </motion.div>
@@ -584,7 +584,7 @@ export default function LandingPage() {
                 Ready to transform your medical meetings?
               </h3>
               <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join thousands of healthcare professionals using BioDocsAI for secure, 
+                Join thousands of healthcare professionals using BioDocsAI for secure,
                 feature-rich video conferencing designed for medical education and practice.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
@@ -636,7 +636,7 @@ export default function LandingPage() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -654,7 +654,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-              Create study groups, share documents, host live streams, and collaborate in real-time. 
+              Create study groups, share documents, host live streams, and collaborate in real-time.
               Perfect for medical students, residents, and research teams.
             </p>
           </motion.div>
@@ -728,7 +728,7 @@ export default function LandingPage() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -746,7 +746,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto">
-              Upload your research PDFs and let AI extract insights, generate comprehensive analyses, 
+              Upload your research PDFs and let AI extract insights, generate comprehensive analyses,
               and create publication-ready research articles. Export to Word, PDF, or PowerPoint.
             </p>
           </motion.div>
@@ -895,9 +895,9 @@ export default function LandingPage() {
               </div>
             </div>
             <ul className="space-y-2 text-sm">
-              <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/>Usage-based credits</li>
-              <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/>Team workspaces</li>
-              <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/>Priority support</li>
+              <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" />Usage-based credits</li>
+              <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" />Team workspaces</li>
+              <li className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary" />Priority support</li>
             </ul>
           </div>
         </div>

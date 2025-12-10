@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "@/provider/theme-provider";
+import { ThemeToggle } from "@/providers/theme-provider";
 import { LogOut, User } from "lucide-react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
