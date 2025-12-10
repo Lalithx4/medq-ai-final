@@ -1,20 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   Search,
   Sparkles,
-  BookOpen,
   Microscope,
   MessageSquare,
   Stethoscope,
-  ArrowRight,
   Paperclip,
   Mic,
   RotateCcw,
+  ExternalLink,
+  Loader2,
+  Filter,
 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 // Tool configuration with neutral/dark styling
 const tools = [
@@ -33,13 +45,6 @@ const tools = [
     iconColor: "text-white"
   },
   {
-    icon: BookOpen,
-    label: "AI Docs",
-    href: "/research-paper",
-    borderColor: "border-amber-700",
-    iconColor: "text-amber-400"
-  },
-  {
     icon: MessageSquare,
     label: "PDF Chat",
     href: "/pdf-chat/dashboard",
@@ -48,10 +53,87 @@ const tools = [
   },
 ];
 
+
+// Discover types
+type DiscoverContentType = "all" | "news" | "journal" | "trial" | "guideline" | "innovation";
+
+interface DiscoverItem {
+  id: string;
+  title: string;
+  summary: string;
+  url: string;
+  source: string;
+  publishedAt?: string;
+  type: "news" | "journal" | "trial" | "guideline" | "innovation";
+  specialties: string[];
+  section?: "recent" | "month" | "year";
+}
+
+const CONTENT_TYPE_OPTIONS: { value: DiscoverContentType; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "news", label: "News" },
+  { value: "journal", label: "Journal" },
+  { value: "trial", label: "Trials" },
+  { value: "guideline", label: "Guidelines" },
+  { value: "innovation", label: "Innovation" },
+];
+
+const SPECIALTY_OPTIONS: { value: string; label: string }[] = [
+  { value: "all", label: "All specialties" },
+  { value: "cardiology", label: "Cardiology" },
+  { value: "oncology", label: "Oncology" },
+  { value: "neurology", label: "Neurology" },
+  { value: "endocrinology", label: "Endocrinology" },
+  { value: "gastroenterology", label: "Gastroenterology" },
+  { value: "orthopedics", label: "Orthopedics" },
+  { value: "pediatrics", label: "Pediatrics" },
+];
+
 export function GensparkHomePage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Discover state
+  const [discoverType, setDiscoverType] = useState<DiscoverContentType>("all");
+  const [discoverSpecialty, setDiscoverSpecialty] = useState("all");
+  const [discoverItems, setDiscoverItems] = useState<DiscoverItem[]>([]);
+  const [isDiscoverLoading, setIsDiscoverLoading] = useState(true);
+  const [discoverError, setDiscoverError] = useState<string | null>(null);
+
+  // Fetch discover feed
+  const fetchDiscoverFeed = async () => {
+    try {
+      setIsDiscoverLoading(true);
+      setDiscoverError(null);
+
+      const params = new URLSearchParams();
+      params.set("type", discoverType);
+      params.set("specialty", discoverSpecialty);
+      params.set("source", "pubmed");
+
+      const res = await fetch(`/api/discover/feed?${params.toString()}`);
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to load discover feed");
+      }
+
+      setDiscoverItems(data.items || []);
+    } catch (err: any) {
+      console.error("[Discover] Error loading feed", err);
+      setDiscoverError(err?.message || "Failed to load discover feed");
+      setDiscoverItems([]);
+    } finally {
+      setIsDiscoverLoading(false);
+    }
+  };
+
+  // Fetch on mount and when filters change
+  useEffect(() => {
+    void fetchDiscoverFeed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discoverType, discoverSpecialty]);
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
@@ -81,11 +163,19 @@ export function GensparkHomePage() {
     }
   };
 
+  const handleOpenDiscoverItem = (item: DiscoverItem) => {
+    if (!item.url) return;
+    window.open(item.url, "_blank", "noopener,noreferrer");
+  };
+
+  const currentTypeLabel = CONTENT_TYPE_OPTIONS.find((o) => o.value === discoverType)?.label || "All";
+  const currentSpecialtyLabel = SPECIALTY_OPTIONS.find((o) => o.value === discoverSpecialty)?.label || "All specialties";
+
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-[#1a1a1c]">
+    <div className="flex flex-col h-full w-full overflow-y-auto bg-[#1a1a1c]">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto">
-        <div className="w-full max-w-3xl mx-auto px-4 md:px-8 py-8">
+      <div className="flex-1 flex flex-col items-center">
+        <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8">
           {/* Header Title */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -170,7 +260,7 @@ export function GensparkHomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-16"
+            className="mt-12"
           >
             <div className="flex items-center justify-center gap-6 md:gap-8 flex-wrap px-4">
               {tools.map((tool, i) => (
@@ -196,10 +286,149 @@ export function GensparkHomePage() {
             </div>
           </motion.div>
 
+          {/* Discover Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-16"
+          >
+            {/* Section Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-teal-600 to-teal-400 flex items-center justify-center">
+                  <Search className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    Discover
+                    <span className="px-2 py-0.5 rounded-full border border-teal-500/30 text-[10px] uppercase tracking-wide text-teal-400 bg-teal-500/10">
+                      PubMed
+                    </span>
+                  </h2>
+                  <p className="text-xs text-gray-500">Latest medical research and news</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Content type filter */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1 text-xs bg-[#2a2a2c] border-gray-700 text-gray-300 hover:bg-[#3a3a3c] hover:text-white">
+                      <Filter className="w-3 h-3" />
+                      <span>{currentTypeLabel}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-[#2a2a2c] border-gray-700 text-gray-300">
+                    <DropdownMenuLabel className="text-gray-400">Content type</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    {CONTENT_TYPE_OPTIONS.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => setDiscoverType(opt.value)}
+                        className={`hover:bg-[#3a3a3c] ${discoverType === opt.value ? "font-semibold text-teal-400" : ""}`}
+                      >
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Specialty filter */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1 text-xs bg-[#2a2a2c] border-gray-700 text-gray-300 hover:bg-[#3a3a3c] hover:text-white">
+                      <Stethoscope className="w-3 h-3" />
+                      <span className="truncate max-w-[100px]">{currentSpecialtyLabel}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-[#2a2a2c] border-gray-700 text-gray-300 max-h-60 overflow-auto">
+                    <DropdownMenuLabel className="text-gray-400">Specialty</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-gray-700" />
+                    {SPECIALTY_OPTIONS.map((opt) => (
+                      <DropdownMenuItem
+                        key={opt.value}
+                        onClick={() => setDiscoverSpecialty(opt.value)}
+                        className={`hover:bg-[#3a3a3c] ${discoverSpecialty === opt.value ? "font-semibold text-teal-400" : ""}`}
+                      >
+                        {opt.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Refresh button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 text-xs bg-[#2a2a2c] border-gray-700 text-gray-300 hover:bg-[#3a3a3c] hover:text-white"
+                  onClick={() => fetchDiscoverFeed()}
+                  disabled={isDiscoverLoading}
+                >
+                  {isDiscoverLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+                  <RotateCcw className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Feed Content */}
+            {isDiscoverLoading && !discoverItems.length ? (
+              <div className="flex items-center justify-center py-12 text-sm text-gray-400 gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading medical discoveries...</span>
+              </div>
+            ) : discoverError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-red-400 gap-2">
+                <p>{discoverError}</p>
+                <Button size="sm" variant="outline" onClick={() => fetchDiscoverFeed()} className="bg-[#2a2a2c] border-gray-700 text-gray-300 hover:bg-[#3a3a3c]">
+                  Retry
+                </Button>
+              </div>
+            ) : !discoverItems.length ? (
+              <div className="flex items-center justify-center py-12 text-sm text-gray-500">
+                No items found. Try a different content type or specialty.
+              </div>
+            ) : (
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {discoverItems.slice(0, 6).map((item) => (
+                  <article
+                    key={item.id}
+                    className="rounded-xl border border-gray-700/50 bg-[#2a2a2c] hover:bg-[#323234] transition-all cursor-pointer flex flex-col hover:-translate-y-0.5 hover:border-teal-500/30"
+                    onClick={() => handleOpenDiscoverItem(item)}
+                  >
+                    <div className="flex-1 p-4 flex flex-col gap-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                          <span className="font-medium truncate max-w-[140px]">{item.source}</span>
+                          {item.publishedAt && (
+                            <span>· {new Date(item.publishedAt).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-200 leading-snug line-clamp-2">
+                        {item.title}
+                      </h3>
+                      {item.summary && (
+                        <p className="text-xs text-gray-500 line-clamp-2">{item.summary}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1 mt-auto text-[9px]">
+                        <span className="px-1.5 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                          {item.type === "journal" ? "Journal" : item.type === "trial" ? "Trial" : item.type === "guideline" ? "Guideline" : item.type === "innovation" ? "Innovation" : "News"}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </motion.div>
+
           {/* Bottom spacing */}
-          <div className="h-12"></div>
+          <div className="h-16"></div>
         </div>
       </div>
     </div>
   );
 }
+

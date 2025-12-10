@@ -35,7 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Feature pages (public marketing pages)
   const featurePages = [
     "presentation-builder",
-    "research-paper",
     "deep-research",
     "editor",
     "citation-generator",
@@ -48,6 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "pdf-chat",
     "video-streaming",
   ].map((feature) => ({
+
     url: `${baseUrl}/${feature}`,
     lastModified,
     changeFrequency: "weekly" as const,

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/home/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "@/components/settings/ProfileTab";
@@ -11,7 +12,17 @@ import { ContactUsTab } from "@/components/settings/ContactUsTab";
 import { User, CreditCard, History, Coins, Mail } from "lucide-react";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("subscription");
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "profile");
+
+  // Update tab when URL changes
+  useEffect(() => {
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
 
   return (
     <AppLayout>

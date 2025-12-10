@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, BookOpen, History, Home, LogOut, Menu, Search, CreditCard, Settings, User as UserIcon, Moon, Sun, Edit3, MessageSquare, SlidersHorizontal, Sparkles, Video, LayoutDashboard, Users, Stethoscope, Plus, FolderOpen, Brain, Microscope } from "lucide-react";
+import { FileText, BookOpen, History, Home, LogOut, Menu, Settings, User as UserIcon, Moon, Sun, Edit3, MessageSquare, SlidersHorizontal, Sparkles, Video, LayoutDashboard, Users, Stethoscope, Plus, FolderOpen, Brain, Microscope } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -200,29 +200,6 @@ export function AppLayout({ children }: AppLayoutProps) {
             {isExpanded && <span className="text-sm">Clinical Assistant</span>}
           </Link>
 
-          <Link
-            href="/deep-research"
-            title="Deep Research"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/deep-research")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <Microscope className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Deep Research</span>}
-          </Link>
-
-          <Link
-            href="/discover"
-            title="Discover"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/discover")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <Search className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Discover</span>}
-          </Link>
 
           {/* Divider */}
           <div className="!my-3 border-t border-gray-800/50" />
@@ -233,15 +210,15 @@ export function AppLayout({ children }: AppLayoutProps) {
           )}
 
           <Link
-            href="/research-paper"
-            title="Research Paper"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/research-paper")
-              ? "bg-gray-800 text-amber-400"
+            href="/deep-research"
+            title="Deep Research"
+            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/deep-research")
+              ? "bg-gray-800 text-white"
               : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
               } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
           >
-            <BookOpen className={`w-[18px] h-[18px] flex-shrink-0 ${isActive("/research-paper") ? 'text-amber-400' : 'text-amber-500'}`} />
-            {isExpanded && <span className="text-sm">Research Paper</span>}
+            <Microscope className="w-[18px] h-[18px] flex-shrink-0" />
+            {isExpanded && <span className="text-sm">Deep Research</span>}
           </Link>
 
           <Link
@@ -256,35 +233,9 @@ export function AppLayout({ children }: AppLayoutProps) {
             {isExpanded && <span className="text-sm">PDF Chat</span>}
           </Link>
 
-          {/* Divider */}
-          <div className="!my-3 border-t border-gray-800/50" />
-
-          <Link
-            href="/pricing"
-            title="Pricing"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/pricing")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <CreditCard className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Pricing</span>}
-          </Link>
-
-          <Link
-            href="/settings"
-            title="Settings"
-            className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/settings")
-              ? "bg-gray-800 text-white"
-              : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-              } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-          >
-            <Settings className="w-[18px] h-[18px] flex-shrink-0" />
-            {isExpanded && <span className="text-sm">Settings</span>}
-          </Link>
-
           {/* Admin Dashboard - Only visible to admins */}
           {user?.role === 'ADMIN' && (
+
             <>
               <div className="!my-3 border-t border-gray-800/50" />
               <Link
@@ -311,29 +262,33 @@ export function AppLayout({ children }: AppLayoutProps) {
 
           {/* User Profile */}
           <div className="px-2 pb-3">
-            <div className={`flex items-center rounded-lg p-2 hover:bg-gray-800/50 transition-all cursor-pointer group ${isExpanded ? 'gap-3' : 'justify-center'}`}>
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-700 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-semibold text-white">{userInitial}</span>
-              </div>
-              {isExpanded && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{userName}</p>
+            <div className={`flex items-center rounded-lg p-2 hover:bg-gray-800/50 transition-all ${isExpanded ? 'gap-2' : 'justify-center'}`}>
+              <Link
+                href="/settings?tab=profile"
+                className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                title="Profile Settings"
+              >
+                <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-700 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-white">{userInitial}</span>
                 </div>
+                {isExpanded && (
+                  <p className="text-sm font-medium text-white truncate">{userName}</p>
+                )}
+              </Link>
+              {isExpanded && (
+                <button
+                  onClick={async () => {
+                    const supabase = getBrowserSupabase();
+                    await supabase.auth.signOut();
+                    router.push('/');
+                  }}
+                  className="p-2 rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-gray-700/50 flex-shrink-0"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               )}
             </div>
-            {isExpanded && (
-              <button
-                onClick={async () => {
-                  const supabase = getBrowserSupabase();
-                  await supabase.auth.signOut();
-                  router.push('/');
-                }}
-                className="w-full mt-1 h-9 text-sm flex items-center justify-center gap-2 rounded-lg transition-colors text-gray-400 hover:text-white hover:bg-gray-800/50"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
-              </button>
-            )}
           </div>
         </div>
       </motion.aside>
@@ -465,7 +420,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile Bottom Navigation - Dark Theme */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-800 bg-[#1a1a1c]/95 backdrop-blur supports-[backdrop-filter]:bg-[#1a1a1c]/75">
-        <div className="grid grid-cols-5 h-14 text-xs">
+        <div className="grid grid-cols-4 h-14 text-xs">
           <Link href="/dashboard" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Home">
             <Home className={`h-4 w-4 ${isActive("/dashboard") ? "text-teal-400" : "text-gray-400"}`} />
             <span className={`text-[9px] ${isActive("/dashboard") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Home</span>
@@ -481,15 +436,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             <span className={`text-[9px] ${isActive("/cdss") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Clinical</span>
             {isActive("/cdss") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
-          <Link href="/research-paper" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Papers">
-            <BookOpen className={`h-4 w-4 ${isActive("/research-paper") ? "text-teal-400" : "text-gray-400"}`} />
-            <span className={`text-[9px] ${isActive("/research-paper") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Papers</span>
-            {isActive("/research-paper") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
-          </Link>
-          <Link href="/settings" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="Settings">
-            <Settings className={`h-4 w-4 ${isActive("/settings") ? "text-teal-400" : "text-gray-400"}`} />
-            <span className={`text-[9px] ${isActive("/settings") ? "font-semibold text-teal-400" : "text-gray-400"}`}>Settings</span>
-            {isActive("/settings") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
+
+          <Link href="/pdf-chat/dashboard" className="flex flex-col items-center justify-center gap-0.5 relative" aria-label="PDF Chat">
+            <MessageSquare className={`h-4 w-4 ${isActive("/pdf-chat") ? "text-teal-400" : "text-gray-400"}`} />
+            <span className={`text-[9px] ${isActive("/pdf-chat") ? "font-semibold text-teal-400" : "text-gray-400"}`}>PDF Chat</span>
+            {isActive("/pdf-chat") && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-teal-500 rounded-full" />}
           </Link>
         </div>
       </nav>
