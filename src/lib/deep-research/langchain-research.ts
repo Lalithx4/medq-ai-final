@@ -88,7 +88,7 @@ class CerebrasLLM {
     this.model = model;
     this.temperature = temperature;
     this.maxTokens = maxTokens;
-    
+
     // Initialize Gemini fallback if API key is available
     const geminiKey = process.env.GOOGLE_AI_API_KEY;
     if (geminiKey) {
@@ -97,30 +97,61 @@ class CerebrasLLM {
     }
   }
 
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    maxRetries = 10, // Increased from 5
+    initialDelay = 5000 // Increased from 2000
+  ): Promise<T> {
+    let retries = 0;
+    while (true) {
+      try {
+        return await fn();
+      } catch (error: any) {
+        if (
+          retries < maxRetries &&
+          (error?.status === 429 ||
+            error?.status === 503 ||
+            error?.message?.includes("429") ||
+            error?.message?.includes("rate limit") ||
+            error?.message?.includes("503"))
+        ) {
+          retries++;
+          const delay = initialDelay * Math.pow(2, retries - 1) + (Math.random() * 1000);
+          console.warn(`[API] Rate limit (${error?.status}), retrying in ${Math.round(delay)}ms (Attempt ${retries}/${maxRetries})...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+
   async invoke(prompt: string): Promise<string> {
-    // Truncate if too long
-    const maxChars = (this.maxTokens - 1000) * 4;
+    // Truncate if too long (leaves room for response)
+    const maxChars = (this.maxTokens - 2000) * 4;
     if (prompt.length > maxChars) {
       prompt = prompt.slice(0, maxChars) + "\n[Content truncated]";
     }
 
     try {
-      const response = await this.client.chat.completions.create({
-        model: this.model,
-        messages: [
-          { role: "system", content: "You are a medical research assistant." },
-          { role: "user", content: prompt },
-        ],
-        max_tokens: this.maxTokens,
-        temperature: this.temperature,
-      });
+      return await this.retryWithBackoff(async () => {
+        const response = await this.client.chat.completions.create({
+          model: this.model,
+          messages: [
+            { role: "system", content: "You are a medical research assistant." },
+            { role: "user", content: prompt },
+          ],
+          max_tokens: this.maxTokens,
+          temperature: this.temperature,
+        });
 
-      const content = (response.choices as any)?.[0]?.message?.content;
-      return typeof content === "string" ? content.trim() : "";
+        const content = (response.choices as any)?.[0]?.message?.content;
+        return typeof content === "string" ? content.trim() : "";
+      });
     } catch (error: any) {
-      // Check if it's a 503 error and fallback to Gemini
-      if ((error?.status === 503 || error?.message?.includes("503")) && this.gemini) {
-        console.warn("⚠️  Cerebras 503 error, falling back to Gemini...");
+      // Check if it's a 503/429 error and fallback to Gemini
+      if ((error?.status === 503 || error?.status === 429 || error?.message?.includes("503") || error?.message?.includes("429")) && this.gemini) {
+        console.warn(`⚠️  Cerebras ${error.status} error after retries, falling back to Gemini...`);
         return await this.invokeGemini(prompt);
       }
       console.error("Cerebras API error:", error);
@@ -143,7 +174,7 @@ class CerebrasLLM {
           maxOutputTokens: this.maxTokens,
         },
       });
-      
+
       const content = response.text || "";
       console.log("✅ Gemini generation successful");
       return content.trim();
@@ -177,12 +208,11 @@ class MultiSourceWrapper {
 
   async load(query: string): Promise<PaperItem[]> {
     try {
-      console.log(`🔍 Multi-source query: "${query}"`);
-      console.log(`   Sources: PubMed=${this.sources.pubmed}, arXiv=${this.sources.arxiv}, Web=${this.sources.web}`);
+      console.log(`🔍 Query: "${query}"`);
 
       // Use MultiSourceService if multiple sources enabled
       const hasMultipleSources = Object.values(this.sources).filter(Boolean).length > 1;
-      
+
       if (hasMultipleSources || this.sources.arxiv || this.sources.web) {
         return await this.multiSourceSearch(query);
       } else {
@@ -216,13 +246,13 @@ class MultiSourceWrapper {
       citationNum: 0, // Will be set later
     }));
 
-    console.log(`✅ Retrieved ${docs.length} papers from multiple sources`);
+    // console.log(`✅ Retrieved ${docs.length} papers from multiple sources`);
     return docs;
   }
 
   private async pubmedOnlySearch(query: string): Promise<PaperItem[]> {
     const result = await this.pubmedService.getResearchData(query, this.topK);
-    
+
     if (result.pmids.length === 0) {
       console.warn(`⚠️  No papers found for query: "${query}"`);
       return [];
@@ -239,7 +269,7 @@ class MultiSourceWrapper {
       };
     });
 
-    console.log(`✅ Retrieved ${docs.length} papers from PubMed`);
+    // console.log(`✅ Retrieved ${docs.length} papers from PubMed`);
     return docs;
   }
 
@@ -247,7 +277,7 @@ class MultiSourceWrapper {
   private async basicSearch(query: string): Promise<PaperItem[]> {
     try {
       console.log(`🔄 Falling back to basic PubMed search...`);
-      
+
       const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
         query
       )}&retmax=${this.topK}&retmode=json`;
@@ -296,7 +326,7 @@ class MultiSourceWrapper {
         idx++;
       }
 
-      console.log(`✅ Basic search retrieved ${docs.length} papers`);
+      // console.log(`✅ Basic search retrieved ${docs.length} papers`);
       return docs;
     } catch (error) {
       console.error("Basic PubMed search also failed:", error);
@@ -330,7 +360,7 @@ export class LangChainResearchService {
     // Reset global trackers for new research session
     PubMedService.resetGlobalUsedPMIDs();
     FallbackResearchService.resetGlobalUsedPapers();
-    console.log('🆕 Starting new research session with fresh trackers');
+    console.log('[Research] Starting new session');
 
     this.reportProgress("🎯 Starting LangChain-powered research...", 0);
 
@@ -355,7 +385,7 @@ export class LangChainResearchService {
 
       const heading = headings[i];
       if (!heading) continue; // Skip if heading is undefined
-      
+
       const section = await this.processSection(
         topic,
         heading,
@@ -403,16 +433,16 @@ Output ONLY the headings, one per line:`;
     }
 
     const finalHeadings = headings.slice(0, n);
-    console.log(`✓ Generated headings:`, finalHeadings);
+    console.log(`✓ Generated ${finalHeadings.length} headings`);
     return finalHeadings.length > 0
       ? finalHeadings
       : [
-          "Overview",
-          "Clinical Features",
-          "Treatment",
-          "Research Findings",
-          "Future Directions",
-        ];
+        "Overview",
+        "Clinical Features",
+        "Treatment",
+        "Research Findings",
+        "Future Directions",
+      ];
   }
 
   /**
@@ -437,12 +467,12 @@ Output ONLY the headings, one per line:`;
     // Analyze each paper
     const digests: string[] = [];
     const dataExtracts: string[] = []; // NEW: Store numerical data extracts
-    
+
     for (const paper of papers) {
       // Existing: narrative summary
       const digest = await this.analyzePaper(paper, heading);
       digests.push(`[${paper.citationNum}] ${paper.Title}\n${digest.trim()}`);
-      
+
       // NEW: extract numerical data
       try {
         const dataExtract = await this.extractNumericalData(paper);
@@ -453,22 +483,25 @@ Output ONLY the headings, one per line:`;
         // Silently continue if data extraction fails
         console.error(`  ⚠️  Data extraction failed for paper ${paper.citationNum}`);
       }
+
+      // Delay to avoid rate limits
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     // NEW: Generate summary table from extracted data
     let tableContent = "";
     if (dataExtracts.length > 0) {
-      console.log(`  📊 Generating data table from ${dataExtracts.length} papers with numerical data...`);
+      // console.log(`  📊 Generating data table from ${dataExtracts.length} papers...`);
       try {
         tableContent = await this.generateDataTable(heading, dataExtracts);
         if (!tableContent) {
-          console.log(`  ℹ️  No meaningful table generated - insufficient numerical data`);
+          // console.log(`  ℹ️  No meaningful table generated`);
         }
       } catch (error) {
         console.error(`  ⚠️  Table generation failed`);
       }
     } else {
-      console.log(`  ℹ️  No numerical data found in papers for this section`);
+      // console.log(`  ℹ️  No numerical data found`);
     }
 
     // Synthesize section content (now with optional table)
@@ -494,7 +527,7 @@ Output ONLY the headings, one per line:`;
       .replace(/[^\w\s]/g, ' ')
       .replace(/\b(comprehensive|review|study|research|analysis|overview)\b/gi, '')
       .trim();
-    
+
     // Extract main keywords from heading (focus on medical terms)
     const headingKeywords = heading
       .toLowerCase()
@@ -502,17 +535,17 @@ Output ONLY the headings, one per line:`;
       .split(/\s+/)
       .filter(w => w.length > 4 && !['with', 'from', 'that', 'this', 'have', 'and', 'the', 'section'].includes(w))
       .slice(0, 2);
-    
+
     // Build flexible query using OR instead of AND for better results
     const headingPart = headingKeywords.join(" OR ");
-    
+
     // Strategy: Use topic + OR heading keywords (more permissive)
     // This allows papers that match topic AND at least one heading keyword
-    const query = headingPart 
+    const query = headingPart
       ? `${cleanTopic} AND (${headingPart})`
       : cleanTopic;
-    
-    console.log(`  Query for "${heading}": ${query}`);
+
+    // console.log(`  Query for "${heading}": ${query}`);
     return query;
   }
 
@@ -605,12 +638,12 @@ If there is insufficient or no valid numerical data, return an empty string.
 Do NOT create a table with empty cells or dashes - only create a table if you have actual numbers to report.`;
 
     const result = await this.llm.invoke(prompt);
-    
+
     // Validate table was generated
     if (!result || result.length < 20 || !result.includes('|')) {
       return "";
     }
-    
+
     return result.trim();
   }
 
@@ -669,7 +702,7 @@ Output the section content in Markdown format:`;
     const allPapersWithDuplicates = sections.flatMap((s) => s.papers);
     const uniquePapersMap = new Map<string, PaperItem>();
     const citationMapping = new Map<number, number>(); // old citation -> new citation
-    
+
     let newCitationNum = 1;
     allPapersWithDuplicates.forEach(paper => {
       if (!uniquePapersMap.has(paper.PMID)) {
@@ -683,15 +716,15 @@ Output the section content in Markdown format:`;
       }
     });
     const allPapers = Array.from(uniquePapersMap.values());
-    
+
     console.log(`📚 Total papers (with duplicates): ${allPapersWithDuplicates.length}`);
     console.log(`📚 Unique papers: ${allPapers.length}`);
-    
+
     // Renumber citations in section content
     let sectionsText = sections
       .map((s) => `## ${s.heading}\n\n${s.content}`)
       .join("\n\n");
-    
+
     // Replace old citation numbers with new ones
     citationMapping.forEach((newNum, oldNum) => {
       if (newNum !== oldNum) {
@@ -862,21 +895,21 @@ CRITICAL RULES:
     const sections = report.sections
       .map((s) => {
         let sectionContent = `## ${s.heading}\n\n`;
-        
+
         // Add data table if available (before the narrative content)
         if (s.dataTable && s.dataTable.trim().length > 0) {
           sectionContent += `### Summary of Key Findings\n\n${s.dataTable}\n\n`;
         }
-        
+
         // Add narrative content
         sectionContent += s.content;
-        
+
         return sectionContent;
       })
       .join("\n\n");
 
     const references = report.references.map((ref) => `${ref}`).join("\n");
-    
+
     // Count sections with tables
     const tablesCount = report.sections.filter(s => s.dataTable && s.dataTable.trim().length > 0).length;
 

@@ -21,6 +21,28 @@ export interface SaveMessageParams {
 
 export class ChatService {
   /**
+   * Create a new conversation explicitly
+   */
+  async createConversation(
+    userId: string,
+    context: ChatContext,
+    title?: string
+  ): Promise<string> {
+    const conversation = await db.chatConversation.create({
+      data: {
+        id: crypto.randomUUID(),
+        userId,
+        context: context.type,
+        metadata: context.metadata || {},
+        title: title || null,
+        updatedAt: new Date(),
+      },
+    });
+
+    return conversation.id;
+  }
+
+  /**
    * Get or create a conversation
    */
   async getOrCreateConversation(
@@ -49,15 +71,7 @@ export class ChatService {
     }
 
     // Create new conversation
-    const conversation = await db.chatConversation.create({
-      data: {
-        userId,
-        context: context.type,
-        metadata: context.metadata || {},
-      },
-    });
-
-    return conversation.id;
+    return this.createConversation(userId, context);
   }
 
   /**
@@ -72,6 +86,7 @@ export class ChatService {
     // Save message
     await db.chatMessage.create({
       data: {
+        id: crypto.randomUUID(),
         conversationId: convId,
         userId,
         role,
@@ -124,7 +139,7 @@ export class ChatService {
       orderBy: { updatedAt: 'desc' },
       take: limit,
       include: {
-        messages: {
+        ChatMessage: {
           take: 1,
           orderBy: { createdAt: 'desc' },
           select: {
@@ -133,20 +148,25 @@ export class ChatService {
           },
         },
         _count: {
-          select: { messages: true },
+          select: { ChatMessage: true },
         },
       },
     });
 
-    return conversations.map(conv => ({
-      id: conv.id,
-      context: conv.context,
-      title: conv.title,
-      lastMessage: conv.messages[0]?.content || '',
-      lastMessageAt: conv.messages[0]?.createdAt || conv.createdAt,
-      messageCount: conv._count.messages,
-      createdAt: conv.createdAt,
-    }));
+    return conversations.map(conv => {
+      const messages = conv.ChatMessage || [];
+      const count = conv._count?.ChatMessage || 0;
+
+      return {
+        id: conv.id,
+        context: conv.context,
+        title: conv.title,
+        lastMessage: messages[0]?.content || '',
+        lastMessageAt: messages[0]?.createdAt || conv.createdAt,
+        messageCount: count,
+        createdAt: conv.createdAt,
+      };
+    });
   }
 
   /**

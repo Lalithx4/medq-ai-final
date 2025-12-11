@@ -61,7 +61,7 @@ export const PRICING_PLANS: PricingPlan[] = [
 ];
 
 // Credit costs for each operation type
-const CREDIT_COSTS: Record<string, number> = {
+export const CREDIT_COSTS: Record<string, number> = {
     // Research operations
     "deep-research": 5,
     "research-paper": 10,

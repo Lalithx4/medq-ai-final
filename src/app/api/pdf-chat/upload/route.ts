@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Credits: compute cost by size (ceil MB)
     const sizeMb = Math.max(1, Math.ceil(file.size / (1024 * 1024)));
-    const uploadCost = sizeMb * (CREDIT_COSTS.pdf_process_per_mb || 0);
+    const uploadCost = sizeMb * (CREDIT_COSTS["pdf-upload"] || 1);
 
     if (uploadCost > 0) {
       const hasCredits = await CreditService.hasEnoughCreditsForAmount(user.id, uploadCost);
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       const deducted = await CreditService.deductAmount(
         user.id,
         uploadCost,
-        `PDF upload (${file.name}) - ${sizeMb}MB @ ${CREDIT_COSTS.pdf_process_per_mb}/MB`,
+        `PDF upload (${file.name}) - ${sizeMb}MB @ ${CREDIT_COSTS["pdf-upload"] || 1}/MB`,
         "pdf_upload_size"
       );
       if (!deducted.success) {
@@ -130,11 +130,11 @@ export async function POST(request: NextRequest) {
         collection_id: collectionId,
       });
       return NextResponse.json(
-        { 
-          error: "Failed to create document record", 
+        {
+          error: "Failed to create document record",
           details: dbError.message,
           hint: dbError.hint,
-          code: dbError.code 
+          code: dbError.code
         },
         { status: 500 }
       );

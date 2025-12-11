@@ -22,11 +22,8 @@ import {
   ArrowRight
 } from "lucide-react";
 
-import { DeepResearchDashboard } from '../deep-research/DeepResearchDashboard';
-import ChatInterface from '../pdf-chat/ChatInterface';
-import { usePDFUpload } from '@/hooks/usePDFUpload';
 import { AnimatePresence } from 'framer-motion';
-
+import { usePDFUpload } from '@/hooks/usePDFUpload';
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -132,8 +129,7 @@ export function HomePage() {
   type SearchMode = "deep-research" | "pdf-chat";
   const [searchMode, setSearchMode] = useState<SearchMode>("deep-research");
 
-  // View state: 'home', 'deep-research', or 'pdf-chat'
-  const [activeView, setActiveView] = useState<'home' | 'deep-research' | 'pdf-chat'>('home');
+
 
   // PDF Chat state
   const [pdfSessionId, setPdfSessionId] = useState<string | null>(null);
@@ -278,49 +274,40 @@ export function HomePage() {
 
     if (searchMode === "pdf-chat") {
       if (pdfSessionId) {
-        setActiveView('pdf-chat');
+        if (searchQuery) localStorage.setItem("pdfChatQuery", searchQuery);
+        router.push(`/chat/${pdfSessionId}`);
       } else if (searchQuery) {
+        // If no session but query, maybe redirect to dashboard with query
         localStorage.setItem("pdfChatQuery", searchQuery);
         router.push("/pdf-chat/dashboard");
       }
       return;
     }
 
-    // Default: Deep Research -> Switch to inline view
-    setActiveView('deep-research');
+    // Deep Research
+    try {
+      const res = await fetch('/api/chat/new', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          context: {
+            type: 'deep-research',
+            metadata: { sources: selectedSources }
+          },
+          title: searchQuery
+        })
+      });
+      const data = await res.json();
+      if (data.id) {
+        router.push(`/chat/${data.id}`);
+      }
+    } catch (e) {
+      console.error("Failed to create chat", e);
+    }
   };
 
-  // Render Inline Views
-  if (activeView === 'deep-research') {
-    return (
-      <div className="min-h-screen bg-[#1c1c1e]">
-        <DeepResearchDashboard
-          initialQuery={searchQuery}
-          initialSources={selectedSources}
-          onBack={() => {
-            setActiveView('home');
-            setSearchQuery("");
-          }}
-        />
-      </div>
-    );
-  }
+  // Render Inline Views Removed - Logic Moved to /chat/[id]
 
-  if (activeView === 'pdf-chat' && pdfSessionId) {
-    return (
-      <div className="min-h-screen bg-[#1c1c1e] flex flex-col">
-        <div className="p-4 border-b border-gray-800 flex items-center gap-4">
-          <button onClick={() => setActiveView('home')} className="text-gray-400 hover:text-white">
-            <ArrowRight className="w-5 h-5 rotate-180" />
-          </button>
-          <span className="text-gray-200 font-medium">PDF Chat: {uploadedFileName}</span>
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <ChatInterface sessionId={pdfSessionId} />
-        </div>
-      </div>
-    );
-  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -372,7 +359,7 @@ export function HomePage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyPress}
                   className="w-full bg-transparent border-none outline-none text-gray-200 placeholder:text-gray-500 text-base"
                 />
               </div>

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
-import { getBrowserSupabase } from "@/lib/supabase/client";
+// import { getBrowserSupabase } from "@/lib/supabase/client"; // Removed unused import
+import { useAuth } from "@/providers/AuthProvider";
 
 interface CreditsContextType {
   credits: number | null;
@@ -14,6 +15,7 @@ interface CreditsContextType {
 const CreditsContext = createContext<CreditsContextType | undefined>(undefined);
 
 export function CreditsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth(); // Use useAuth hook
   const [credits, setCredits] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -31,10 +33,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
     setError(false);
 
     try {
-      // Check if user is authenticated first
-      const supabase = getBrowserSupabase();
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      // Check if user is authenticated first (using AuthContext)
       if (!user) {
         // Not authenticated - don't try to fetch credits
         console.log("[CreditsContext] User not authenticated, skipping credits fetch");
@@ -80,7 +79,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
         console.log("[CreditsContext] Setting credits to:", creditsValue);
         setCredits(creditsValue);
         setError(false);
-        
+
         // Check if credits are unlimited (system disabled)
         if (creditsValue === 999999) {
           setIsEnabled(false);
@@ -102,7 +101,7 @@ export function CreditsProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [credits]);
+  }, [credits, user]);
 
   // Fetch on mount
   useEffect(() => {

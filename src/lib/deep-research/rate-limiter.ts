@@ -16,11 +16,11 @@ export class RateLimiter {
   private lastRequestTime = 0;
   private requestCount = 0;
   private windowStart = Date.now();
-  
+
   constructor(
     private maxRequestsPerSecond: number = 3,
     private windowMs: number = 1000
-  ) {}
+  ) { }
 
   /**
    * Add a request to the queue
@@ -30,10 +30,10 @@ export class RateLimiter {
   async enqueue<T>(fn: () => Promise<T>, priority: number = 0): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       this.queue.push({ fn, resolve, reject, priority });
-      
+
       // Sort by priority (higher first)
       this.queue.sort((a, b) => b.priority - a.priority);
-      
+
       // Start processing if not already running
       if (!this.processing) {
         this.processQueue();
@@ -134,7 +134,7 @@ export class RateLimiterManager {
    */
   static getFallbackLimiter(): RateLimiter {
     if (!this.fallbackLimiter) {
-      this.fallbackLimiter = new RateLimiter(2, 1000);
+      this.fallbackLimiter = new RateLimiter(1, 1000);
     }
     return this.fallbackLimiter;
   }

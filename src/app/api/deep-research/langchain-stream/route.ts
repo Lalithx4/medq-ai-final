@@ -1,19 +1,51 @@
 import { NextRequest } from "next/server";
 import { LangChainResearchService } from "@/lib/deep-research/langchain-research";
 import { getServerSupabase } from "@/lib/supabase/server";
+import crypto from 'crypto';
 
 export const maxDuration = 300; // 5 minutes
 export const runtime = "nodejs";
 
+import { db } from "@/server/db";
+
 export async function POST(req: NextRequest) {
   const supabase = await getServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  let { data: { user } } = await supabase.auth.getUser();
+
+  // MOCK USER FALLBACK (for development)
+  if (!user && process.env.NODE_ENV === "development") {
+    const mockUserId = "mock-user-id";
+    console.log("[Deep Research API] Using mock user:", mockUserId);
+
+    // Upsert mock user to ensure database integrity
+    try {
+      await db.user.upsert({
+        where: { id: mockUserId },
+        update: {},
+        create: {
+          id: mockUserId,
+          email: "test@example.com",
+          name: "Mock User",
+          role: "USER",
+          credits: 100,
+          hasAccess: true
+        }
+      });
+    } catch (dbError) {
+      console.warn("⚠️ [Deep Research API] Failed to upsert mock user:", dbError);
+      // Continue anyway as this is dev/fallback logic
+    }
+
+    user = { id: mockUserId, email: "test@example.com" } as any;
+  }
+
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const { 
-    topic, 
+  const {
+    topic,
+    conversationId,
     topK = 10,  // Increased from 5 to 10 papers per section
     nSections = 5,
     sources = { pubmed: true, arxiv: false, web: false }
@@ -22,6 +54,8 @@ export async function POST(req: NextRequest) {
   if (!topic || typeof topic !== "string") {
     return new Response("Topic is required", { status: 400 });
   }
+
+  console.log(`[Deep Research] Starting research. Topic: "${topic}", ConversationId: ${conversationId}`);
 
   const apiKey = process.env.CEREBRAS_API_KEY;
   if (!apiKey) {
@@ -44,11 +78,26 @@ export async function POST(req: NextRequest) {
       };
       const safeClose = () => {
         if (!isClosed) {
-          try { controller.close(); } catch {}
+          try { controller.close(); } catch { }
           isClosed = true;
         }
       };
       try {
+        // Save User Message (Topic)
+        if (conversationId) {
+          console.log(`[Deep Research] Persisting user message for conversation: ${conversationId}`);
+          await db.chatMessage.create({
+            data: {
+              id: crypto.randomUUID(),
+              conversationId,
+              userId: user.id,
+              role: 'user',
+              content: topic,
+              metadata: { type: 'text' }
+            }
+          });
+        }
+
         const service = new LangChainResearchService(apiKey);
 
         // Send initial message
@@ -70,6 +119,28 @@ export async function POST(req: NextRequest) {
 
         // Format as markdown
         const markdown = LangChainResearchService.formatAsMarkdown(report);
+
+        // Save Assistant Message (Report)
+        if (conversationId) {
+          console.log(`[Deep Research] Persisting assistant report for conversation: ${conversationId}`);
+          await db.chatMessage.create({
+            data: {
+              id: crypto.randomUUID(),
+              conversationId,
+              userId: user.id,
+              role: 'assistant',
+              content: markdown,
+              metadata: {
+                type: 'research_report',
+                data: {
+                  markdown: markdown,
+                  metadata: report.metadata,
+                  topic: topic
+                }
+              }
+            }
+          });
+        }
 
         // Send metadata first (small)
         safeEnqueue({ type: "metadata", metadata: report.metadata });

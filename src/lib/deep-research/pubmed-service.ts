@@ -19,7 +19,7 @@ export interface PMIDData {
 export class PubMedService {
   private static instance: PubMedService;
   private static globalUsedPMIDs: Set<string> = new Set(); // Global tracker across all instances
-  
+
   private baseUrl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
   private email: string;
   private apiKey?: string;
@@ -47,8 +47,7 @@ export class PubMedService {
    * Reset the global used PMIDs tracker (call this at the start of a new research session)
    */
   static resetGlobalUsedPMIDs(): void {
-    PubMedService.globalUsedPMIDs.clear();
-    console.log('🔄 Reset global PMID tracker');
+    // console.log('🔄 Reset global PMID tracker');
   }
 
   /**
@@ -74,7 +73,7 @@ export class PubMedService {
   private extractKeywords(query: string): string[] {
     const keywords: string[] = [];
     const lower = query.toLowerCase();
-    
+
     // EXPANDED stop words to exclude generic medical descriptors
     const stopWords = [
       // Common words (but NOT "sub" or "total" which are medical modifiers)
@@ -84,17 +83,17 @@ export class PubMedService {
       // Generic medical descriptors (these are TOO BROAD to search alone)
       'introduction', 'indications', 'contraindications', 'complications', 'management', 'treatment', 'diagnosis', 'prognosis', 'outcomes', 'techniques', 'approaches', 'methods', 'procedures', 'surgical', 'clinical', 'pathophysiology', 'anatomy', 'physiology', 'epidemiology', 'etiology', 'prevention', 'therapy', 'postoperative', 'preoperative', 'intraoperative', 'care', 'rehabilitation'
     ];
-    
+
     // Extract medical concepts using patterns (diseases, procedures, etc.)
     const medicalConcepts = this.extractMedicalConcepts(query);
     keywords.push(...medicalConcepts);
-    
+
     // Check for multi-word medical terms (e.g., "subtotal maxillectomy", "total knee replacement")
     const multiWordPatterns = [
       /\b(sub\s*total|partial|complete|total|radical|modified)\s+(\w+ectomy|\w+otomy|\w+plasty|\w+scopy)\b/gi,
       /\b(\w+)\s+(maxillectomy|craniotomy|mastectomy|colectomy|gastrectomy|nephrectomy)\b/gi,
     ];
-    
+
     for (const pattern of multiWordPatterns) {
       const matches = query.match(pattern);
       if (matches) {
@@ -102,16 +101,16 @@ export class PubMedService {
         keywords.unshift(...matches.map(m => m.trim()));
       }
     }
-    
+
     // Only add specific medical terms, not generic descriptors
     const words = lower
       .replace(/[^\w\s-]/g, ' ')
       .split(/\s+/)
       .filter(w => w.length > 3 && !stopWords.includes(w));
-    
+
     // Add remaining significant words (but prioritize medical concepts)
     keywords.push(...words.filter(w => !keywords.includes(w)));
-    
+
     // CRITICAL: Return only the first 1-2 most specific terms
     // Prioritize multi-word terms (they're more specific)
     return [...new Set(keywords)].slice(0, 2);
@@ -123,17 +122,17 @@ export class PubMedService {
   private buildAdvancedQuery(keywords: string[]): string {
     if (keywords.length === 0) return '';
     if (keywords.length === 1) return keywords[0] || '';
-    
+
     // Strategy: Use AND for first 2-3 most important terms, OR for the rest
     const primaryTerms = keywords.slice(0, Math.min(3, keywords.length));
     const secondaryTerms = keywords.slice(3);
-    
+
     let query = primaryTerms.join(' AND ');
-    
+
     if (secondaryTerms.length > 0) {
       query = `(${query}) AND (${secondaryTerms.join(' OR ')})`;
     }
-    
+
     return query;
   }
 
@@ -145,9 +144,9 @@ export class PubMedService {
       // CRITICAL: Clean and disambiguate the query first
       const cleanedQuery = this.cleanQuery(topic);
       const hasFieldSyntax = /\[[^\]]+\]/.test(cleanedQuery);
-      console.log(`🔍 Original query: "${topic}"`);
-      console.log(`🔍 Cleaned query: "${cleanedQuery}"`);
-      
+      // console.log(`🔍 Original query: "${topic}"`);
+      // console.log(`🔍 Cleaned query: "${cleanedQuery}"`);
+
       const searchUrl = `${this.baseUrl}/esearch.fcgi`;
       const params = new URLSearchParams({
         db: 'pubmed',
@@ -160,12 +159,12 @@ export class PubMedService {
         sort: hasFieldSyntax ? 'pub+date' : 'relevance',
         email: this.email,
       });
-      
+
       if (this.apiKey) {
         params.append('api_key', this.apiKey);
       }
 
-      const res = await this.rateLimiter.enqueue(() => 
+      const res = await this.rateLimiter.enqueue(() =>
         fetch(`${searchUrl}?${params}`, {
           headers: {
             'Accept': 'application/json',
@@ -173,9 +172,9 @@ export class PubMedService {
           }
         })
       );
-      
+
       const text = await res.text();
-      
+
       // Guard against non-JSON responses (XML error pages, HTML, etc.)
       if (!res.ok) {
         console.warn(`[PubMed] non-OK ${res.status}: ${text.slice(0, 120)}...`);
@@ -185,7 +184,7 @@ export class PubMedService {
         console.warn('[PubMed] Received XML/HTML instead of JSON; falling back');
         return [];
       }
-      
+
       // Safe JSON parsing
       let data: any;
       try {
@@ -194,10 +193,10 @@ export class PubMedService {
         console.warn('[PubMed] JSON parse failed for esearch; falling back. Snippet:', text.slice(0, 120));
         return [];
       }
-      
+
       const pmids = data.esearchresult?.idlist || [];
-      console.log(`✅ Found ${pmids.length} PMIDs for: ${cleanedQuery}`);
-      
+      // console.log(`✅ Found ${pmids.length} PMIDs for: ${cleanedQuery}`);
+
       return pmids;
     } catch (error) {
       console.error('PubMed search error:', error);
@@ -214,17 +213,17 @@ export class PubMedService {
     // Process in batches of 10 - rate limiter handles throttling automatically
     for (let i = 0; i < pmids.length; i += 10) {
       const batch = pmids.slice(i, i + 10);
-      
+
       // Retry logic with exponential backoff
       let batchSuccess = false;
       for (let attempt = 0; attempt < 3 && !batchSuccess; attempt++) {
         try {
           if (attempt > 0) {
             const backoffDelay = 1000 * Math.pow(2, attempt - 1); // 1s, 2s
-            console.log(`[PubMed] Retry attempt ${attempt} after ${backoffDelay}ms delay...`);
+            // console.log(`[PubMed] Retry attempt ${attempt} after ${backoffDelay}ms delay...`);
             await new Promise(resolve => setTimeout(resolve, backoffDelay));
           }
-          
+
           const fetchUrl = `${this.baseUrl}/esummary.fcgi`;
           const params = new URLSearchParams({
             db: 'pubmed',
@@ -232,12 +231,12 @@ export class PubMedService {
             retmode: 'json',
             email: this.email,
           });
-          
+
           if (this.apiKey) {
             params.append('api_key', this.apiKey);
           }
 
-          const res = await this.rateLimiter.enqueue(() => 
+          const res = await this.rateLimiter.enqueue(() =>
             fetch(`${fetchUrl}?${params}`, {
               headers: {
                 'Accept': 'application/json',
@@ -245,9 +244,9 @@ export class PubMedService {
               }
             })
           );
-          
+
           const text = await res.text();
-          
+
           // Guard against non-JSON responses
           if (!res.ok) {
             if (res.status === 429 && attempt < 2) {
@@ -257,12 +256,12 @@ export class PubMedService {
             console.warn(`[PubMed] metadata response not OK; status ${res.status}`);
             break; // Don't retry for other errors
           }
-          
+
           if (text.trim().startsWith('<')) {
             console.warn('[PubMed] Received XML/HTML instead of JSON');
             break; // Don't retry for XML
           }
-          
+
           // Safe JSON parsing
           let data: any;
           try {
@@ -287,7 +286,7 @@ export class PubMedService {
               };
             }
           }
-          
+
           batchSuccess = true; // Mark as successful
         } catch (error) {
           console.error(`Error fetching batch ${i}-${i + 10} (attempt ${attempt + 1}):`, error);
@@ -298,7 +297,7 @@ export class PubMedService {
       }
     }
 
-    console.log(`✅ Fetched metadata for ${Object.keys(metadata).length} PMIDs`);
+    // console.log(`✅ Fetched metadata for ${Object.keys(metadata).length} PMIDs`);
     return metadata;
   }
 
@@ -321,7 +320,7 @@ export class PubMedService {
   private extractMedicalConcepts(topic: string): string[] {
     const concepts: string[] = [];
     const lower = topic.toLowerCase();
-    
+
     // Common medical terms patterns
     const medicalPatterns = [
       // Diseases
@@ -337,14 +336,14 @@ export class PubMedService {
       // Diagnostic terms
       /\b(diagnosis|screening|biomarker|imaging|ct scan|mri|ultrasound|x-ray|echocardiogram|ekg|ecg|blood test|biopsy)\b/gi,
     ];
-    
+
     for (const pattern of medicalPatterns) {
       const matches = lower.match(pattern);
       if (matches) {
         concepts.push(...matches);
       }
     }
-    
+
     return [...new Set(concepts)]; // Remove duplicates
   }
 
@@ -362,7 +361,7 @@ export class PubMedService {
       return query.trim();
     }
     let cleaned = query.replace(/\b(research|study|paper|article|on|about|the|a|an|write|generate|create)\b/gi, ' ').trim();
-    
+
     // ============================================================================
     // TYPO CORRECTION - Common medical term misspellings
     // ============================================================================
@@ -385,14 +384,14 @@ export class PubMedService {
       'haemorrhage': 'hemorrhage',
       'oedema': 'edema',
     };
-    
+
     for (const [typo, correct] of Object.entries(typoFixes)) {
       const regex = new RegExp(`\\b${typo}\\b`, 'gi');
       cleaned = cleaned.replace(regex, correct);
     }
-    
-    console.log(`🔧 Typo correction: "${query}" → "${cleaned}"`);
-    
+
+    // console.log(`🔧 Typo correction: "${query}" → "${cleaned}"`);
+
     // ============================================================================
     // DIABETES DISAMBIGUATION
     // ============================================================================
@@ -425,7 +424,7 @@ export class PubMedService {
         return cleaned;
       }
     }
-    
+
     // ============================================================================
     // CANCER DISAMBIGUATION
     // ============================================================================
@@ -433,7 +432,7 @@ export class PubMedService {
       // Keep specific cancer type
       const cancerTypes = ['lung', 'breast', 'colon', 'colorectal', 'prostate', 'pancreatic', 'liver', 'stomach', 'brain', 'skin', 'melanoma', 'leukemia', 'lymphoma'];
       const hasSpecificType = cancerTypes.some(type => queryLower.includes(type));
-      
+
       if (hasSpecificType) {
         // Keep as is - specific type mentioned
         return cleaned;
@@ -443,7 +442,7 @@ export class PubMedService {
         return cleaned;
       }
     }
-    
+
     // ============================================================================
     // HEART DISEASE DISAMBIGUATION
     // ============================================================================
@@ -465,7 +464,7 @@ export class PubMedService {
         return cleaned;
       }
     }
-    
+
     // ============================================================================
     // KIDNEY DISEASE DISAMBIGUATION
     // ============================================================================
@@ -481,7 +480,7 @@ export class PubMedService {
         return cleaned;
       }
     }
-    
+
     // ============================================================================
     // CRISPR/GENE EDITING DISAMBIGUATION
     // ============================================================================
@@ -493,7 +492,7 @@ export class PubMedService {
       }
       return cleaned;
     }
-    
+
     // ============================================================================
     // HYPERTENSION DISAMBIGUATION
     // ============================================================================
@@ -505,16 +504,16 @@ export class PubMedService {
       }
       return cleaned;
     }
-    
+
     // ============================================================================
     // STANDARD CLEANING FOR OTHER TOPICS
     // ============================================================================
     // Remove special characters that might break PubMed search
     cleaned = cleaned.replace(/[^\w\s-()]/g, ' ');
-    
+
     // Remove extra spaces
     cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    
+
     return cleaned;
   }
 
@@ -535,68 +534,68 @@ export class PubMedService {
   }> {
     // Clean the search query
     const cleanedTopic = this.cleanSearchQuery(topic);
-    console.log(`🔍 Searching PubMed for: ${cleanedTopic}`);
-    
+    // console.log(`🔍 Searching PubMed for: ${cleanedTopic}`);
+
     // Extract keywords for fallback strategies
     const keywords = this.extractKeywords(cleanedTopic);
-    console.log(`📝 Extracted keywords: ${keywords.join(', ')}`);
-    
+    // console.log(`📝 Extracted keywords: ${keywords.join(', ')}`);
+
     // Try multiple search strategies
     let pmids: string[] = [];
-    
+
     // Strategy 1: Cleaned query (exact phrase)
-    console.log(`🔍 Strategy 1: Exact cleaned query`);
+    // console.log(`🔍 Strategy 1: Exact cleaned query`);
     pmids = await this.searchPubMed(cleanedTopic, 30);
-    
+
     // Strategy 2: Use ONLY the first (most specific) keyword
     if (pmids.length < minPMIDs && keywords.length >= 1 && keywords[0]) {
-      console.log(`⚠️ Only ${pmids.length} results, trying primary keyword: ${keywords[0]}`);
+      // console.log(`⚠️ Only ${pmids.length} results, trying primary keyword: ${keywords[0]}`);
       pmids = await this.searchPubMed(keywords[0], 30);
     }
-    
+
     // Strategy 3: Try with quotes (exact phrase match)
     if (pmids.length < minPMIDs) {
-      console.log(`⚠️ Only ${pmids.length} results, trying quoted search...`);
+      // console.log(`⚠️ Only ${pmids.length} results, trying quoted search...`);
       pmids = await this.searchPubMed(`"${cleanedTopic}"`, 30);
     }
-    
+
     // Strategy 4: Try original topic as last resort
     if (pmids.length < minPMIDs && cleanedTopic !== topic) {
-      console.log(`⚠️ Only ${pmids.length} results, trying original query...`);
+      // console.log(`⚠️ Only ${pmids.length} results, trying original query...`);
       pmids = await this.searchPubMed(topic, 30);
     }
-    
+
     let metadata: Record<string, PMIDData> = {};
-    
+
     // If PubMed found results, fetch metadata
     if (pmids.length > 0) {
       // CRITICAL: Filter out already-used PMIDs to ensure uniqueness across sections
       const unusedPmids = pmids.filter(pmid => !PubMedService.globalUsedPMIDs.has(pmid));
-      console.log(`📊 PMIDs: ${pmids.length} total, ${unusedPmids.length} unused, ${PubMedService.globalUsedPMIDs.size} already used`);
-      
+      // console.log(`📊 PMIDs: ${pmids.length} total, ${unusedPmids.length} unused, ${PubMedService.globalUsedPMIDs.size} already used`);
+
       // Take up to minPMIDs from unused PMIDs
       const pmidsToFetch = unusedPmids.slice(0, minPMIDs);
-      
+
       if (pmidsToFetch.length > 0) {
         metadata = await this.fetchPMIDMetadata(pmidsToFetch);
-        
+
         // Mark these PMIDs as used in global tracker
         pmidsToFetch.forEach(pmid => PubMedService.globalUsedPMIDs.add(pmid));
-        console.log(`✅ Fetched ${Object.keys(metadata).length} new unique papers (${PubMedService.globalUsedPMIDs.size} total used)`);
+        // console.log(`✅ Fetched ${Object.keys(metadata).length} new unique papers (${PubMedService.globalUsedPMIDs.size} total used)`);
       }
     }
-    
+
     // Strategy 9: Use fallback sources if metadata fetch failed or insufficient results
     const metadataCount = Object.keys(metadata).length;
     if (metadataCount < minPMIDs) {
       const needed = minPMIDs - metadataCount;
-      console.log(`🔄 Using fallback sources (PubMed: ${pmids.length} PMIDs, ${metadataCount} with metadata, need ${needed} more)...`);
+      // console.log(`🔄 Using fallback sources (PubMed: ${pmids.length} PMIDs, ${metadataCount} with metadata, need ${needed} more)...`);
       try {
         // CRITICAL: Use CORE TOPIC for fallback, not the section-specific query
         const coreTopic = this.extractCoreTopic(cleanedTopic);
-        console.log(`🎯 Fallback searching for core topic: "${coreTopic}"`);
+        // console.log(`🎯 Fallback searching for core topic: "${coreTopic}"`);
         const fallbackPapers = await this.fallbackService.searchWithFallback(coreTopic, needed);
-        
+
         // Convert fallback papers to PMIDData format
         fallbackPapers.forEach((paper, index) => {
           const fallbackId = `fallback_${paper.source}_${index}`;
@@ -612,19 +611,21 @@ export class PubMedService {
           };
           pmids.push(fallbackId);
         });
-        
-        console.log(`✅ Added ${fallbackPapers.length} papers from fallback sources (total: ${Object.keys(metadata).length})`);
+
+
+
+        // console.log(`✅ Added ${fallbackPapers.length} papers from fallback sources (total: ${Object.keys(metadata).length})`);
       } catch (error) {
         console.error('❌ Fallback sources failed:', error instanceof Error ? error.message : 'Unknown error');
         console.warn(`⚠️ Proceeding with ${metadataCount} papers (requested ${minPMIDs})`);
         // Continue with whatever papers we have - don't fail the entire research
       }
     }
-    
-    return { 
-      pmids: pmids.slice(0, minPMIDs), 
+
+    return {
+      pmids: pmids.slice(0, minPMIDs),
       metadata,
-      cleanedTopic 
+      cleanedTopic
     };
   }
 

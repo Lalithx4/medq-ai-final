@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { CreditsDisplay } from "@/components/credits/CreditsDisplay";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -55,12 +56,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const autoHideRef = useRef<NodeJS.Timeout | null>(null);
 
   // Collapsible sections state
-  const [isToolsCollapsed, setIsToolsCollapsed] = useState(false);
   const [isMainCollapsed, setIsMainCollapsed] = useState(false);
 
   // Chat history state
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+
+  const { user: contextUser } = useAuth();
 
   // Set sidebar open by default on desktop only
   useEffect(() => {
@@ -68,40 +70,44 @@ export function AppLayout({ children }: AppLayoutProps) {
     setIsSidebarOpen(isDesktop);
   }, []);
 
-  // Get user from Supabase with role
+  // Sync user from AuthContext and fetch role
   useEffect(() => {
-    const fetchUser = async () => {
-      const supabase = getBrowserSupabase();
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-
-      if (authUser) {
+    const fetchProfile = async () => {
+      if (contextUser) {
         // Fetch user profile with role from database
+        const supabase = getBrowserSupabase();
         const { data: profile } = await supabase
           .from('User')
           .select('role')
-          .eq('id', authUser.id)
+          .eq('id', contextUser.id)
           .single();
 
         setUser({
-          email: authUser.email,
-          name: authUser.user_metadata?.name || authUser.email?.split('@')[0],
+          email: contextUser.email || undefined,
+          name: contextUser.email?.split('@')[0],
           role: profile?.role || 'USER'
         });
+      } else {
+        setUser(null);
       }
     };
 
-    fetchUser();
-  }, []);
+    fetchProfile();
+  }, [contextUser]);
 
   // Fetch chat history
   useEffect(() => {
     const fetchChatHistory = async () => {
+      if (!user) return; // Don't fetch if no user
+
       try {
         setIsHistoryLoading(true);
         const res = await fetch('/api/chat');
         if (res.ok) {
           const data = await res.json();
           setChatHistory(data.conversations || []);
+        } else if (res.status === 401) {
+          // Handle unauthorized silenty or clear state (optional)
         }
       } catch (error) {
         console.error('Failed to fetch chat history:', error);
@@ -111,7 +117,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
 
     fetchChatHistory();
-  }, []);
+  }, [user]);
 
   const userEmail = user?.email || "user@example.com";
   const userName = user?.name || user?.email?.split('@')[0] || "User";
@@ -263,59 +269,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             )}
           </AnimatePresence>
 
-          {/* Divider */}
-          <div className="!my-3 border-t border-gray-800/50" />
 
-          {/* Tools Section - Collapsible */}
-          {isExpanded && (
-            <button
-              onClick={() => setIsToolsCollapsed(!isToolsCollapsed)}
-              className="w-full flex items-center justify-between text-[10px] font-medium uppercase text-gray-500 px-2 mb-2 tracking-wider hover:text-gray-400 transition-colors"
-            >
-              <span>Tools</span>
-              {isToolsCollapsed ? (
-                <ChevronRight className="w-3 h-3" />
-              ) : (
-                <ChevronDown className="w-3 h-3" />
-              )}
-            </button>
-          )}
-
-          <AnimatePresence>
-            {!isToolsCollapsed && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-1 overflow-hidden"
-              >
-                <Link
-                  href="/deep-research"
-                  title="Deep Research"
-                  className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/deep-research")
-                    ? "bg-gray-800 text-white"
-                    : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-                    } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-                >
-                  <Microscope className="w-[18px] h-[18px] flex-shrink-0" />
-                  {isExpanded && <span className="text-sm">Deep Research</span>}
-                </Link>
-
-                <Link
-                  href="/pdf-chat/dashboard"
-                  title="PDF Chat"
-                  className={`flex items-center h-10 rounded-lg transition-all group ${isActive("/pdf-chat")
-                    ? "bg-gray-800 text-white"
-                    : "hover:bg-gray-800/50 text-gray-400 hover:text-gray-200"
-                    } ${isExpanded ? 'px-3 gap-3' : 'justify-center'}`}
-                >
-                  <MessageSquare className="w-[18px] h-[18px] flex-shrink-0" />
-                  {isExpanded && <span className="text-sm">PDF Chat</span>}
-                </Link>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Admin Dashboard - Only visible to admins */}
           {user?.role === 'ADMIN' && (

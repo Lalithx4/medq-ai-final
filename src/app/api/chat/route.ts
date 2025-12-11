@@ -9,7 +9,17 @@ const CEREBRAS_API_URL = "https://api.cerebras.ai/v1/chat/completions";
 export async function POST(req: NextRequest) {
   try {
     const supabase = await getServerSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    let { data: { user } } = await supabase.auth.getUser();
+
+    // MOCK USER FALLBACK (for development)
+    if (!user && process.env.NODE_ENV === "development") {
+      const mockUserId = "mock-user-id";
+      // We don't need to upsert here as it should be done by other endpoints or seed, 
+      // but safe to assume it exists if we are just reading.
+      // Or we can just mock the object.
+      user = { id: mockUserId, email: "test@example.com" } as any;
+    }
+
     if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -107,7 +117,14 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const supabase = await getServerSupabase();
-    const { data: { user } } = await supabase.auth.getUser();
+    let { data: { user } } = await supabase.auth.getUser();
+
+    // MOCK USER FALLBACK (for development)
+    if (!user && process.env.NODE_ENV === "development") {
+      const mockUserId = "mock-user-id";
+      user = { id: mockUserId, email: "test@example.com" } as any;
+    }
+
     if (!user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

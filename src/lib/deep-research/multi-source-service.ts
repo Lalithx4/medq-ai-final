@@ -61,8 +61,7 @@ export class MultiSourceService {
       web: number;
     };
   }> {
-    console.log(`🔍 Multi-source search for: "${query}"`);
-    console.log(`   Sources: PubMed=${sources.pubmed}, arXiv=${sources.arxiv}, Web=${sources.web}`);
+    // console.log(`🔍 Search: "${query}" [${Object.keys(sources).filter(k => sources[k as keyof SourceSelection]).join(',')}]`);
 
     const allResults: UnifiedSource[] = [];
     const sourceStats = { pubmed: 0, arxiv: 0, web: 0 };
@@ -115,11 +114,7 @@ export class MultiSourceService {
     // Rank by relevance
     const ranked = this.rankResults(deduplicated, query);
 
-    console.log(`✅ Multi-source search complete:`);
-    console.log(`   PubMed: ${sourceStats.pubmed} results`);
-    console.log(`   arXiv: ${sourceStats.arxiv} results`);
-    console.log(`   Web: ${sourceStats.web} results`);
-    console.log(`   Total: ${ranked.length} unique results`);
+    // console.log(`✅ Search complete: ${ranked.length} results (PubMed:${sourceStats.pubmed}, arXiv:${sourceStats.arxiv}, Web:${sourceStats.web})`);
 
     return {
       results: ranked,
