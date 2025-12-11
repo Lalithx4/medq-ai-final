@@ -45,14 +45,14 @@ export class CrossRefService {
 
         if (response.status === 429) {
           retries++;
-          const delay = 2000 * Math.pow(2, retries - 1);
-          console.warn(`[CrossRef] Rate limit 429. Retrying in ${delay}ms...`);
-          await new Promise(r => setTimeout(r, delay));
-          continue;
+          if (retries < maxRetries) {
+            const delay = Math.pow(2, retries) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
         }
 
         if (!response.ok) {
-          console.warn(`[CrossRef] API error: ${response.status}`);
           return [];
         }
 
@@ -85,10 +85,10 @@ export class SemanticScholarService {
   private rateLimiter = RateLimiterManager.getFallbackLimiter();
 
   async searchPapers(query: string, maxResults: number = 20): Promise<ResearchPaper[]> {
-    let retries = 0;
+    let retryCount = 0;
     const maxRetries = 3;
 
-    while (retries < maxRetries) {
+    while (retryCount < maxRetries) {
       try {
         const params = new URLSearchParams({
           query,
@@ -106,15 +106,15 @@ export class SemanticScholarService {
         );
 
         if (response.status === 429) {
-          retries++;
-          const delay = 2000 * Math.pow(2, retries - 1);
-          console.warn(`[Semantic Scholar] Rate limit 429. Retrying in ${delay}ms...`);
-          await new Promise(r => setTimeout(r, delay));
-          continue;
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const delay = Math.pow(2, retryCount) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
         }
 
         if (!response.ok) {
-          console.warn(`[Semantic Scholar] API error: ${response.status}`);
           return [];
         }
 
@@ -147,16 +147,16 @@ export class OpenAlexService {
   private rateLimiter = RateLimiterManager.getFallbackLimiter();
 
   async searchPapers(query: string, maxResults: number = 20): Promise<ResearchPaper[]> {
-    let retries = 0;
+    let retryCount = 0;
     const maxRetries = 3;
 
-    while (retries < maxRetries) {
+    while (retryCount < maxRetries) {
       try {
         const params = new URLSearchParams({
           search: query,
           'per-page': String(maxResults),
           select: 'id,title,authorships,publication_year,abstract_inverted_index,primary_location,doi',
-          filter: 'type:journal-article,has_abstract:true,from_publication_date:2000-01-01'
+          filter: 'type:journal-article,has-abstract:true,from_publication_date:2000-01-01'
         });
 
         const response = await this.rateLimiter.enqueue(() =>
@@ -169,15 +169,15 @@ export class OpenAlexService {
         );
 
         if (response.status === 429) {
-          retries++;
-          const delay = 2000 * Math.pow(2, retries - 1);
-          console.warn(`[OpenAlex] Rate limit 429. Retrying in ${delay}ms...`);
-          await new Promise(r => setTimeout(r, delay));
-          continue;
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const delay = Math.pow(2, retryCount) * 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
         }
 
         if (!response.ok) {
-          console.warn(`[OpenAlex] API error: ${response.status}`);
           return [];
         }
 
@@ -234,11 +234,9 @@ export class FallbackResearchService {
    */
   static resetGlobalUsedPapers(): void {
     FallbackResearchService.globalUsedPaperIds.clear();
-    console.log('🔄 Reset global fallback papers tracker');
   }
 
   async searchWithFallback(query: string, targetCount: number = 20): Promise<ResearchPaper[]> {
-    console.log(`🔍 Using fallback sources for: ${query}`);
 
     // Query all sources in parallel - rate limiter handles throttling
     const perSource = Math.max(20, targetCount);
@@ -308,7 +306,6 @@ export class FallbackResearchService {
     dedup.sort((x, y) => score(y) - score(x));
     const finalList = dedup.slice(0, targetCount);
 
-    console.log(`✅ Fallback sources: ${dedup.length} unique papers (from ${all.length} total, ${FallbackResearchService.globalUsedPaperIds.size} globally used)`);
     return finalList;
   }
 }

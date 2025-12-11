@@ -30,7 +30,7 @@ export class ArxivService {
     try {
       // Clean and optimize query
       const cleanedQuery = this.cleanQuery(query);
-      console.log(`🔍 Searching arXiv for: ${cleanedQuery}`);
+
 
       // Build search URL
       const params = new URLSearchParams({
@@ -51,11 +51,11 @@ export class ArxivService {
       const xmlText = await response.text();
       const papers = this.parseArxivXML(xmlText);
 
-      console.log(`✅ Found ${papers.length} papers from arXiv`);
+
       return papers;
 
     } catch (error) {
-      console.error('arXiv search failed:', error);
+
       return [];
     }
   }
@@ -68,7 +68,7 @@ export class ArxivService {
 
     try {
       const cleanedQuery = this.cleanQuery(query);
-      
+
       const params = new URLSearchParams({
         search_query: `cat:${category} AND all:${cleanedQuery}`,
         start: '0',
@@ -200,13 +200,13 @@ export class ArxivService {
         .filter(name => name.length > 0)
         .slice(0, 5); // Limit to 5 authors
 
-      const authorsStr = authors.length > 3 
+      const authorsStr = authors.length > 3
         ? `${authors.slice(0, 3).join(', ')} et al.`
         : authors.join(', ');
 
       // Extract categories
       const categoryMatches = entry.match(/<category term="(.*?)"/g) || [];
-      const categories = categoryMatches.map(cat => 
+      const categories = categoryMatches.map(cat =>
         cat.match(/term="(.*?)"/)?.[1] || ''
       ).filter(cat => cat.length > 0);
 

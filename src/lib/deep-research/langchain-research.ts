@@ -93,14 +93,13 @@ class CerebrasLLM {
     const geminiKey = process.env.GOOGLE_AI_API_KEY;
     if (geminiKey) {
       this.gemini = new GoogleGenAI({ apiKey: geminiKey });
-      console.log("✅ Gemini fallback initialized");
     }
   }
 
   private async retryWithBackoff<T>(
     fn: () => Promise<T>,
-    maxRetries = 10, // Increased from 5
-    initialDelay = 5000 // Increased from 2000
+    maxRetries = 3,
+    initialDelay = 1000
   ): Promise<T> {
     let retries = 0;
     while (true) {
@@ -117,7 +116,6 @@ class CerebrasLLM {
         ) {
           retries++;
           const delay = initialDelay * Math.pow(2, retries - 1) + (Math.random() * 1000);
-          console.warn(`[API] Rate limit (${error?.status}), retrying in ${Math.round(delay)}ms (Attempt ${retries}/${maxRetries})...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -151,7 +149,6 @@ class CerebrasLLM {
     } catch (error: any) {
       // Check if it's a 503/429 error and fallback to Gemini
       if ((error?.status === 503 || error?.status === 429 || error?.message?.includes("503") || error?.message?.includes("429")) && this.gemini) {
-        console.warn(`⚠️  Cerebras ${error.status} error after retries, falling back to Gemini...`);
         return await this.invokeGemini(prompt);
       }
       console.error("Cerebras API error:", error);
@@ -176,7 +173,6 @@ class CerebrasLLM {
       });
 
       const content = response.text || "";
-      console.log("✅ Gemini generation successful");
       return content.trim();
     } catch (error: any) {
       console.error("❌ Gemini generation failed:", error.message);
@@ -208,8 +204,6 @@ class MultiSourceWrapper {
 
   async load(query: string): Promise<PaperItem[]> {
     try {
-      console.log(`🔍 Query: "${query}"`);
-
       // Use MultiSourceService if multiple sources enabled
       const hasMultipleSources = Object.values(this.sources).filter(Boolean).length > 1;
 
@@ -234,7 +228,6 @@ class MultiSourceWrapper {
     );
 
     if (results.length === 0) {
-      console.warn(`⚠️  No papers found for query: "${query}"`);
       return [];
     }
 
@@ -254,7 +247,6 @@ class MultiSourceWrapper {
     const result = await this.pubmedService.getResearchData(query, this.topK);
 
     if (result.pmids.length === 0) {
-      console.warn(`⚠️  No papers found for query: "${query}"`);
       return [];
     }
 
@@ -276,8 +268,6 @@ class MultiSourceWrapper {
   // Fallback to basic search
   private async basicSearch(query: string): Promise<PaperItem[]> {
     try {
-      console.log(`🔄 Falling back to basic PubMed search...`);
-
       const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
         query
       )}&retmax=${this.topK}&retmode=json`;
@@ -328,6 +318,7 @@ class MultiSourceWrapper {
 
       // console.log(`✅ Basic search retrieved ${docs.length} papers`);
       return docs;
+      return docs;
     } catch (error) {
       console.error("Basic PubMed search also failed:", error);
       return [];
@@ -360,7 +351,6 @@ export class LangChainResearchService {
     // Reset global trackers for new research session
     PubMedService.resetGlobalUsedPMIDs();
     FallbackResearchService.resetGlobalUsedPapers();
-    console.log('[Research] Starting new session');
 
     this.reportProgress("🎯 Starting LangChain-powered research...", 0);
 
@@ -433,7 +423,6 @@ Output ONLY the headings, one per line:`;
     }
 
     const finalHeadings = headings.slice(0, n);
-    console.log(`✓ Generated ${finalHeadings.length} headings`);
     return finalHeadings.length > 0
       ? finalHeadings
       : [
@@ -717,9 +706,6 @@ Output the section content in Markdown format:`;
     });
     const allPapers = Array.from(uniquePapersMap.values());
 
-    console.log(`📚 Total papers (with duplicates): ${allPapersWithDuplicates.length}`);
-    console.log(`📚 Unique papers: ${allPapers.length}`);
-
     // Renumber citations in section content
     let sectionsText = sections
       .map((s) => `## ${s.heading}\n\n${s.content}`)
@@ -813,10 +799,6 @@ CRITICAL RULES:
     const fullText = `${abstract} ${introduction} ${sectionsText} ${discussion} ${conclusion}`;
     const wordCount = fullText.split(/\s+/).length;
 
-    console.log(`✔ Deep research article complete`);
-    console.log(`  📊 Word count: ${wordCount.toLocaleString()} words`);
-    console.log(`  📚 References: ${allPapers.length} papers`);
-
     return {
       title,
       abstract,
@@ -840,10 +822,6 @@ CRITICAL RULES:
     const validCitationNums = papers.map((p) => p.citationNum);
     const maxCitation = Math.max(...validCitationNums);
 
-    console.log(
-      `🔍 Validating citations. Valid range: [1-${maxCitation}]`
-    );
-
     // Find all [number] citations in text
     const citationPattern = /\[(\d+)\]/g;
     const foundCitations = new Set<number>();
@@ -859,23 +837,15 @@ CRITICAL RULES:
     );
 
     if (invalidCitations.length > 0) {
-      console.warn(
-        `⚠️  Found ${invalidCitations.length} invalid citations:`,
-        invalidCitations.sort((a, b) => a - b)
-      );
-
       // Remove invalid citations
       let cleaned = text;
       invalidCitations.forEach((num) => {
         const regex = new RegExp(`\\[${num}\\]`, "g");
         cleaned = cleaned.replace(regex, "");
       });
-
-      console.log(`✓ Removed invalid citations`);
       return cleaned;
     }
 
-    console.log(`✓ All citations valid`);
     return text;
   }
 
@@ -883,7 +853,6 @@ CRITICAL RULES:
    * Report progress
    */
   private reportProgress(message: string, progress: number) {
-    console.log(`[${progress}%] ${message}`);
     this.onProgress?.(message, progress);
   }
 

@@ -24,7 +24,6 @@ export class WebSearchService {
     try {
       // Clean query
       const cleanedQuery = this.cleanQuery(query);
-      console.log(`🔍 Searching web for: ${cleanedQuery}`);
 
       // Use DuckDuckGo HTML
       const encodedQuery = encodeURIComponent(cleanedQuery);
@@ -43,7 +42,6 @@ export class WebSearchService {
       const html = await response.text();
       const results = this.parseHTML(html, maxResults);
 
-      console.log(`✅ Found ${results.length} web results`);
       return results;
 
     } catch (error) {

@@ -84,7 +84,7 @@ export class MultiAgentResearchService {
     for (let i = 0; i < headings.length; i++) {
       const heading = headings[i];
       const progress = 10 + ((i + 1) / headings.length) * 70;
-      
+
       onProgress?.(
         `📖 Section ${i + 1}/${headings.length}: ${heading}`,
         progress
@@ -92,14 +92,14 @@ export class MultiAgentResearchService {
 
       const section = await this.processSection(
         topic,
-        heading,
+        heading ?? "",
         topK,
         citationCounter
       );
-      
+
       sections.push(section);
       citationCounter += section.papers.length;
-      
+
       onProgress?.(
         `✓ Completed section ${i + 1}/${headings.length} (${section.papers.length} papers)`,
         progress
@@ -131,7 +131,7 @@ Each heading should represent a distinct aspect (e.g., Pathophysiology, Clinical
 Output ONLY the headings, one per line:`;
 
     const response = await this.callCerebras(prompt, 500);
-    
+
     // Parse and clean headings
     const lines = response.split("\n").filter((l) => l.trim());
     const headings = lines
@@ -205,7 +205,7 @@ Section focus: ${heading}
 Generate 1 focused PubMed search query for this specific section:`;
 
     const response = await this.callCerebras(prompt, 200);
-    return response.trim().split("\n")[0].slice(0, 200);
+    return (response.trim().split("\n")[0] ?? "").slice(0, 200);
   }
 
   /**
@@ -238,22 +238,22 @@ Generate 1 focused PubMed search query for this specific section:`;
 
       let idx = 0;
       for (const match of articleMatches) {
-        const article = match[1];
-        
+        const article = match[1] ?? "";
+
         // Extract PMID
         const pmidMatch = article.match(/<PMID[^>]*>(\d+)<\/PMID>/);
-        const pmid = pmidMatch ? pmidMatch[1] : pmids[idx] || "";
+        const pmid = pmidMatch ? (pmidMatch[1] ?? "") : (pmids[idx] ?? "");
 
         // Extract title
         const titleMatch = article.match(/<ArticleTitle>([\s\S]*?)<\/ArticleTitle>/);
-        const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, "").trim() : "Untitled";
+        const title = titleMatch ? (titleMatch[1] ?? "").replace(/<[^>]+>/g, "").trim() : "Untitled";
 
         // Extract abstract
         const abstractMatch = article.match(/<Abstract>([\s\S]*?)<\/Abstract>/);
         let abstract = "";
-        if (abstractMatch) {
+        if (abstractMatch && abstractMatch[1]) {
           const abstractTexts = abstractMatch[1].matchAll(/<AbstractText[^>]*>([\s\S]*?)<\/AbstractText>/g);
-          abstract = Array.from(abstractTexts).map(m => m[1].replace(/<[^>]+>/g, "")).join(" ");
+          abstract = Array.from(abstractTexts).map(m => (m[1] ?? "").replace(/<[^>]+>/g, "")).join(" ");
         }
 
         papers.push({
@@ -332,7 +332,7 @@ Write a COMPREHENSIVE section (600-800 words) for this heading:
 Output the section content in Markdown format:`;
 
     const content = await this.callCerebras(prompt, 1500);
-    
+
     // Validate and clean citations
     return this.validateCitations(content, papers);
   }
@@ -343,20 +343,19 @@ Output the section content in Markdown format:`;
   private validateCitations(content: string, papers: PaperItem[]): string {
     const validCitations = new Set(papers.map(p => p.citationNum));
     const citationRegex = /\[(\d+)\]/g;
-    
+
     let cleaned = content.replace(citationRegex, (match, num) => {
       const citNum = parseInt(num);
       if (validCitations.has(citNum)) {
         return match; // Keep valid citation
       } else {
-        console.warn(`⚠️  Removed hallucinated citation ${match}`);
         return ''; // Remove invalid citation
       }
     });
-    
+
     // Clean up any double spaces left by removed citations
     cleaned = cleaned.replace(/\s+/g, ' ').replace(/\s+\./g, '.');
-    
+
     return cleaned;
   }
 
@@ -418,7 +417,7 @@ Format:
 CRITICAL: Include ALL provided section content verbatim. Do not shorten or summarize the sections.`;
 
     const assembled = await this.callCerebras(prompt, 3000);
-    
+
     // Validate citations in the assembled report
     const validatedAssembly = this.validateCitations(assembled, allPapers);
 
@@ -483,11 +482,9 @@ CRITICAL: Include ALL provided section content verbatim. Do not shorten or summa
   ): Promise<string> {
     // Add small delay to avoid rate limiting (stagger requests)
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        console.log(`Calling Cerebras API (attempt ${attempt + 1}/${retries + 1}, max_tokens: ${maxTokens}, prompt length: ${prompt.length})`);
-        
         const stream = await this.cerebras.chat.completions.create({
           model: this.model,
           messages: [
@@ -507,44 +504,33 @@ CRITICAL: Include ALL provided section content verbatim. Do not shorten or summa
         });
 
         let result = "";
-        let chunkCount = 0;
-        
+
         for await (const chunk of stream) {
-          chunkCount++;
           const content = (chunk as any).choices?.[0]?.delta?.content || "";
           result += content;
         }
 
-        console.log(`✓ Cerebras API success: ${chunkCount} chunks, ${result.length} chars`);
         return result.trim();
       } catch (error: any) {
-        console.error(`✗ Cerebras API error (attempt ${attempt + 1}/${retries + 1}):`, {
-          message: error?.message,
-          status: error?.status,
-          code: error?.code,
-          type: error?.type,
-        });
-        
+        console.error(`Cerebras API error (attempt ${attempt + 1}/${retries + 1}):`, error?.message);
+
         // Don't retry on auth errors
         if (error?.status === 401) {
           throw new Error("Cerebras API authentication failed. Check your CEREBRAS_API_KEY in .env file.");
         }
-        
+
         // Don't retry on model not found
         if (error?.status === 404) {
           throw new Error(`Cerebras model '${this.model}' not found. Try 'llama-3.3-70b' or 'llama3.1-8b'.`);
         }
-        
-        // Retry on rate limits or server errors
+
         if (attempt < retries && (error?.status === 429 || error?.status >= 500)) {
-          // Longer delay for rate limits
-          const baseDelay = error?.status === 429 ? 5000 : 1000;
-          const delay = Math.pow(2, attempt) * baseDelay; // Exponential backoff
-          console.log(`⏳ Rate limit hit. Retrying in ${delay}ms...`);
+          const baseDelay = error?.status === 429 ? 2000 : 1000;
+          const delay = Math.pow(2, attempt) * baseDelay;
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
-        
+
         // Last attempt or non-retryable error
         if (error?.message) {
           throw new Error(`Cerebras API error: ${error.message}`);
@@ -553,7 +539,7 @@ CRITICAL: Include ALL provided section content verbatim. Do not shorten or summa
         }
       }
     }
-    
+
     throw new Error("Failed to call Cerebras API after all retries.");
   }
 

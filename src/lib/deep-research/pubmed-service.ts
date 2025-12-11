@@ -177,11 +177,11 @@ export class PubMedService {
 
       // Guard against non-JSON responses (XML error pages, HTML, etc.)
       if (!res.ok) {
-        console.warn(`[PubMed] non-OK ${res.status}: ${text.slice(0, 120)}...`);
+        // Non-OK response, fall back
         return [];
       }
       if (text.trim().startsWith('<')) {
-        console.warn('[PubMed] Received XML/HTML instead of JSON; falling back');
+        // Received XML/HTML instead of JSON, fall back
         return [];
       }
 
@@ -190,7 +190,7 @@ export class PubMedService {
       try {
         data = JSON.parse(text);
       } catch (e) {
-        console.warn('[PubMed] JSON parse failed for esearch; falling back. Snippet:', text.slice(0, 120));
+        // JSON parse failed, fall back
         return [];
       }
 
@@ -250,15 +250,15 @@ export class PubMedService {
           // Guard against non-JSON responses
           if (!res.ok) {
             if (res.status === 429 && attempt < 2) {
-              console.warn(`[PubMed] Rate limited (429), retrying...`);
+              // Rate limited, retry
               continue; // Retry
             }
-            console.warn(`[PubMed] metadata response not OK; status ${res.status}`);
+            // Non-OK status
             break; // Don't retry for other errors
           }
 
           if (text.trim().startsWith('<')) {
-            console.warn('[PubMed] Received XML/HTML instead of JSON');
+            // Received XML/HTML
             break; // Don't retry for XML
           }
 
@@ -267,7 +267,7 @@ export class PubMedService {
           try {
             data = JSON.parse(text);
           } catch (e) {
-            console.warn('[PubMed] JSON parse failed for esummary batch. Snippet:', text.slice(0, 120));
+            // JSON parse failed
             break; // Don't retry for parse errors
           }
 
@@ -617,7 +617,7 @@ export class PubMedService {
         // console.log(`✅ Added ${fallbackPapers.length} papers from fallback sources (total: ${Object.keys(metadata).length})`);
       } catch (error) {
         console.error('❌ Fallback sources failed:', error instanceof Error ? error.message : 'Unknown error');
-        console.warn(`⚠️ Proceeding with ${metadataCount} papers (requested ${minPMIDs})`);
+        // Proceeding with fewer papers
         // Continue with whatever papers we have - don't fail the entire research
       }
     }

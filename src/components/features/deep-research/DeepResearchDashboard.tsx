@@ -274,7 +274,7 @@ export const DeepResearchDashboard = ({ initialQuery, conversationId, initialMes
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8 scroll-smooth">
+      <div className="flex-1 overflow-y-auto py-6 space-y-8 scroll-smooth">
         {messages.length === 0 && !isResearching && (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-6 opacity-50">
             <div className="w-16 h-16 rounded-2xl bg-teal-500/10 flex items-center justify-center mb-2">
@@ -348,9 +348,9 @@ export const DeepResearchDashboard = ({ initialQuery, conversationId, initialMes
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full mt-8"
+            className="w-full"
           >
-            <div className="bg-[#2a2a2c]/50 backdrop-blur border border-teal-500/20 rounded-2xl p-6 shadow-2xl">
+            <div className="bg-[#1a1a1c] px-6 py-6">
               <ProgressTracker
                 topic={[...messages].reverse().find(m => m.role === 'user')?.content || "Research"}
                 overallProgress={overallProgress}

@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
   // MOCK USER FALLBACK (for development)
   if (!user && process.env.NODE_ENV === "development") {
     const mockUserId = "mock-user-id";
-    console.log("[Deep Research API] Using mock user:", mockUserId);
 
     // Upsert mock user to ensure database integrity
     try {
@@ -55,7 +54,7 @@ export async function POST(req: NextRequest) {
     return new Response("Topic is required", { status: 400 });
   }
 
-  console.log(`[Deep Research] Starting research. Topic: "${topic}", ConversationId: ${conversationId}`);
+
 
   const apiKey = process.env.CEREBRAS_API_KEY;
   if (!apiKey) {
@@ -85,7 +84,6 @@ export async function POST(req: NextRequest) {
       try {
         // Save User Message (Topic)
         if (conversationId) {
-          console.log(`[Deep Research] Persisting user message for conversation: ${conversationId}`);
           await db.chatMessage.create({
             data: {
               id: crypto.randomUUID(),
@@ -122,7 +120,6 @@ export async function POST(req: NextRequest) {
 
         // Save Assistant Message (Report)
         if (conversationId) {
-          console.log(`[Deep Research] Persisting assistant report for conversation: ${conversationId}`);
           await db.chatMessage.create({
             data: {
               id: crypto.randomUUID(),
