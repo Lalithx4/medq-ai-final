@@ -1,11 +1,11 @@
 'use client';
 
-import { AppLayout } from '@/components/home/AppLayout';
+import { AppLayout } from '@/components/features/home/AppLayout';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import ChatInterface from '@/components/pdf-chat/ChatInterface';
-import { AnalysisPanel } from '@/components/pdf-chat/AnalysisPanel';
-import { ArticlePanel } from '@/components/pdf-chat/ArticlePanel';
+import ChatInterface from '@/components/features/pdf-chat/ChatInterface';
+import { AnalysisPanel } from '@/components/features/pdf-chat/AnalysisPanel';
+import { ArticlePanel } from '@/components/features/pdf-chat/ArticlePanel';
 import { Loader2, ArrowLeft, FileText, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

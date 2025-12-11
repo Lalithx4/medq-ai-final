@@ -52,15 +52,6 @@ const sidebarItems = [
     items: [
       { name: 'Users', href: '/admin/users', icon: Users },
       { name: 'Content', href: '/admin/content', icon: FileText },
-      { name: 'Video Streams', href: '/admin/streams', icon: Video },
-    ],
-  },
-  {
-    title: 'Revenue',
-    items: [
-      { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
-      { name: 'Ad Management', href: '/admin/ads', icon: Megaphone },
-      { name: 'Revenue Reports', href: '/admin/revenue', icon: TrendingUp },
     ],
   },
   {

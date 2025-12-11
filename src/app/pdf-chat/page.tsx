@@ -1,5 +1,5 @@
-import { AppLayout } from '@/components/home/AppLayout';
-import PDFUploader from '@/components/pdf-chat/PDFUploader';
+import { AppLayout } from '@/components/features/home/AppLayout';
+import PDFUploader from '@/components/features/pdf-chat/PDFUploader';
 import { FileText, Zap, Shield, History, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';

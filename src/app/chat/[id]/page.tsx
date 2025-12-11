@@ -1,6 +1,6 @@
-import { AppLayout } from "@/components/home/AppLayout";
-import { DeepResearchDashboard } from "@/components/deep-research/DeepResearchDashboard";
-import ChatInterface from "@/components/pdf-chat/ChatInterface";
+import { AppLayout } from "@/components/features/home/AppLayout";
+import { DeepResearchDashboard } from "@/components/features/deep-research/DeepResearchDashboard";
+import ChatInterface from "@/components/features/pdf-chat/ChatInterface";
 import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 
@@ -47,6 +47,8 @@ export default async function ChatIdPage(props: Props) {
                                 type: (msg.metadata as any)?.type || "text",
                                 data: (msg.metadata as any)?.data
                             }))}
+                            key={conversation.id} // Force re-mount on ID change to reset state
+                            conversationCreatedAt={conversation.createdAt}
                         // We might need to handle onBack, but usually navigating away is enough
                         />
                     </div>

@@ -36,10 +36,6 @@ interface DashboardStats {
   newUsersToday: number;
   newUsersThisWeek: number;
   totalDocuments: number;
-  totalStreams: number;
-  liveStreams: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
   avgSessionDuration: number;
   pageViews: number;
   bounceRate: number;
@@ -80,7 +76,7 @@ export default function AdminDashboard() {
     setIsLoading(true);
     try {
       const supabase = getBrowserSupabase();
-      
+
       // Fetch user stats
       const { count: totalUsers } = await supabase
         .from('User')
@@ -106,28 +102,6 @@ export default function AdminDashboard() {
         .from('pdf_documents')
         .select('*', { count: 'exact', head: true });
 
-      // Fetch stream stats
-      const { count: totalStreams } = await supabase
-        .from('streaming_rooms')
-        .select('*', { count: 'exact', head: true });
-
-      const { count: liveStreams } = await supabase
-        .from('streaming_rooms')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'live');
-
-      // Fetch payment stats
-      const { data: payments } = await supabase
-        .from('payments')
-        .select('amount, createdAt')
-        .eq('status', 'completed');
-
-      const totalRevenue = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      const monthlyPayments = payments?.filter(p => 
-        new Date(p.createdAt) >= new Date(monthAgo)
-      ) || [];
-      const monthlyRevenue = monthlyPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-
       // Calculate active users (users who logged in within last 7 days)
       const { count: activeUsers } = await supabase
         .from('User')
@@ -140,10 +114,6 @@ export default function AdminDashboard() {
         newUsersToday: newUsersToday || 0,
         newUsersThisWeek: newUsersThisWeek || 0,
         totalDocuments: totalDocuments || 0,
-        totalStreams: totalStreams || 0,
-        liveStreams: liveStreams || 0,
-        totalRevenue: totalRevenue / 100, // Convert from cents
-        monthlyRevenue: monthlyRevenue / 100,
         avgSessionDuration: 12.5, // Placeholder - would need analytics integration
         pageViews: 45230, // Placeholder
         bounceRate: 32.4, // Placeholder
@@ -308,26 +278,10 @@ export default function AdminDashboard() {
           icon={FileText}
           color="blue"
         />
-        <StatCard
-          title="Monthly Revenue"
-          value={`$${stats?.monthlyRevenue.toLocaleString() || '0'}`}
-          change={23.1}
-          changeType="increase"
-          icon={DollarSign}
-          subtitle={`$${stats?.totalRevenue.toLocaleString() || '0'} total`}
-          color="purple"
-        />
       </div>
 
       {/* Secondary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Video Streams"
-          value={stats?.totalStreams || 0}
-          icon={Video}
-          subtitle={`${stats?.liveStreams || 0} live now`}
-          color="orange"
-        />
         <StatCard
           title="Page Views"
           value={stats?.pageViews.toLocaleString() || '0'}

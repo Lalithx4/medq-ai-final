@@ -3,7 +3,7 @@
  * Handles all file uploads to Supabase Storage
  */
 
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '@/lib/db/supabase-client';
 
 export class SupabaseStorageService {
   private _client: ReturnType<typeof getSupabaseClient> | null = null;
@@ -26,15 +26,15 @@ export class SupabaseStorageService {
     folder: 'deep-research' | 'research-paper' | 'documents' = 'deep-research'
   ): Promise<{ path: string; url: string }> {
     const filePath = `${folder}/${userId}/${filename}`;
-    
+
     console.log(`📤 Uploading to Supabase Storage...`);
     console.log(`   Bucket: ${this.bucketName}`);
     console.log(`   Path: ${filePath}`);
     console.log(`   Content size: ${content.length} bytes`);
-    
+
     // Convert string to Blob for upload
     const blob = new Blob([content], { type: 'text/markdown' });
-    
+
     const { data, error } = await this.client.storage
       .from(this.bucketName)
       .upload(filePath, blob, {
@@ -141,7 +141,7 @@ export class SupabaseStorageService {
     folder: string = 'uploads'
   ): Promise<{ path: string; url: string }> {
     const filePath = `${folder}/${userId}/${filename}`;
-    
+
     const { data, error } = await this.client.storage
       .from(this.bucketName)
       .upload(filePath, file, {
@@ -169,9 +169,9 @@ export class SupabaseStorageService {
    */
   async ensureBucketExists(): Promise<void> {
     const { data: buckets } = await this.client.storage.listBuckets();
-    
+
     const bucketExists = buckets?.some(b => b.name === this.bucketName);
-    
+
     if (!bucketExists) {
       const { error } = await this.client.storage.createBucket(this.bucketName, {
         public: true, // Make files publicly accessible

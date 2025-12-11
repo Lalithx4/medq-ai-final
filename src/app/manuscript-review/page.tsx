@@ -1,5 +1,5 @@
-import { ManuscriptReviewDashboard } from "@/components/manuscript-review/ManuscriptReviewDashboard";
-import { AppLayout } from "@/components/home/AppLayout";
+import { ManuscriptReviewDashboard } from "@/components/features/manuscript-review/ManuscriptReviewDashboard";
+import { AppLayout } from "@/components/features/home/AppLayout";
 
 export default function ManuscriptReviewPage() {
   return (

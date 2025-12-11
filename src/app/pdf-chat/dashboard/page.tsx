@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AppLayout } from '@/components/home/AppLayout';
+import { AppLayout } from '@/components/features/home/AppLayout';
 import { FileText, MessageSquare, Clock, Trash2, Eye, Plus, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { PDFDocument } from '@/lib/pdf-chat/types';

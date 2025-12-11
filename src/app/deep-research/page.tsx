@@ -1,5 +1,5 @@
-import { DeepResearchDashboard } from "@/components/deep-research/DeepResearchDashboard";
-import { AppLayout } from "@/components/home/AppLayout";
+import { DeepResearchDashboard } from "@/components/features/deep-research/DeepResearchDashboard";
+import { AppLayout } from "@/components/features/home/AppLayout";
 
 export default function DeepResearchPage() {
   return (

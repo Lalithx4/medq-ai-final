@@ -5,7 +5,7 @@ import { CreditsProvider } from "@/contexts/CreditsContext";
 import "@/styles/globals.css";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
-import { EnvRuntimeProvider } from "@/components/system/EnvRuntimeProvider";
+import { EnvRuntimeProvider } from "@/components/features/system/EnvRuntimeProvider";
 
 // Ensure this layout is rendered dynamically on each request so runtime env vars are available
 export const dynamic = "force-dynamic";

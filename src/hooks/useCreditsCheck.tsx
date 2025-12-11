@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { getCreditCost } from "@/lib/pricing/plans";
-import { InsufficientCreditsModal, LowCreditsWarningModal } from "@/components/credits/InsufficientCreditsModal";
+import { InsufficientCreditsModal, LowCreditsWarningModal } from "@/components/features/credits/InsufficientCreditsModal";
 import { useCredits } from "@/contexts/CreditsContext";
 
 const LOW_CREDITS_THRESHOLD = 20;

@@ -1,4 +1,4 @@
-import { ResearchDashboard } from "@/components/research/ResearchDashboard";
+import { ResearchDashboard } from "@/components/features/research/ResearchDashboard";
 
 export default function Page() {
   return <ResearchDashboard />;

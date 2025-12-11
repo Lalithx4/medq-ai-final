@@ -19,30 +19,22 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
-    
+
     // RAG System Configuration
     RAG_MODE: z.enum(["self-hosted", "gemini"]).optional().default("self-hosted"),
     RAG_BACKEND_URL: z.string().url().optional(),
-    
-    // Payment gateways
-    STRIPE_SECRET_KEY: z.string().optional(),
-    STRIPE_WEBHOOK_SECRET: z.string().optional(),
-    RAZORPAY_KEY_ID: z.string().optional(),
-    RAZORPAY_KEY_SECRET: z.string().optional(),
-    RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
-    
+
+
+
     // Credit system toggle
     ENABLE_CREDIT_SYSTEM: z.string().optional().default("true"),
   },
-  
+
   client: {
     NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: z.string().optional(),
-    // Payment provider: "razorpay" | "paypal" | "stripe"
-    NEXT_PUBLIC_PAYMENT_PROVIDER: z.enum(["razorpay", "paypal", "stripe"]).optional().default("razorpay"),
+
   },
 
   runtimeEnv: {
@@ -61,18 +53,11 @@ export const env = createEnv({
     GOOGLE_AI_API_KEY: process.env.GOOGLE_AI_API_KEY,
     RAG_MODE: process.env.RAG_MODE,
     RAG_BACKEND_URL: process.env.RAG_BACKEND_URL,
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
     ENABLE_CREDIT_SYSTEM: process.env.ENABLE_CREDIT_SYSTEM,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-    NEXT_PUBLIC_PAYMENT_PROVIDER: process.env.NEXT_PUBLIC_PAYMENT_PROVIDER,
+
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

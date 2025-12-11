@@ -1,4 +1,4 @@
-import { AppLayout } from "@/components/home/AppLayout";
+import { AppLayout } from "@/components/features/home/AppLayout";
 import type React from "react";
 
 export default function ResearchLayout({

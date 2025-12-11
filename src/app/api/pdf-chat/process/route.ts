@@ -2,7 +2,7 @@ import { getServerSupabase } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import type { FastAPIProcessRequest, FastAPIProcessResponse } from "@/lib/pdf-chat/types";
 import { CreditService } from "@/lib/credits/credit-service";
-import { CREDIT_COSTS } from "@/lib/pricing/plans";
+import { CREDIT_COSTS } from "@/lib/credits/costs";
 import { getUnifiedRAGService } from "@/lib/rag/unified-rag-service";
 import { getGeminiFileSearchService } from "@/lib/rag/gemini-file-search";
 import { readFile } from "fs/promises";
@@ -57,18 +57,18 @@ export async function POST(request: NextRequest) {
     // Get unified RAG service (automatically detects mode from env)
     const ragService = getUnifiedRAGService();
     const ragMode = ragService.getMode();
-    
+
     console.log(`📄 Processing document using ${ragMode.toUpperCase()} mode`);
 
     try {
       // Read file from disk
       console.log(`📂 Reading file from: ${document.file_url}`);
       const fileBuffer = await readFile(document.file_url);
-      
+
       // If document belongs to a collection, upload to that collection's File Search Store
       let result;
       const collection = document.pdf_collections;
-      
+
       if (collection) {
         const existingStore = collection.file_search_store_id as string | null;
         const isRealStore = !!existingStore && existingStore.startsWith("fileSearchStores/");
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
           document.original_filename || document.filename,
           requestedStore
         );
-        
+
         console.log("✅ Uploaded to collection store", {
           requestedStore,
           actualStore: uploadResult.storeName,
@@ -107,15 +107,15 @@ export async function POST(request: NextRequest) {
             .update({ file_search_store_id: uploadResult.storeName })
             .eq("id", collection.id);
         }
-        
+
         result = {
           success: true,
           mode: 'gemini',
           documentId: uploadResult.storeName,
-          metadata: { 
+          metadata: {
             fileId: uploadResult.fileId,
             fileName: uploadResult.fileName,
-            collectionId: document.collection_id 
+            collectionId: document.collection_id
           },
         };
       } else {
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           console.error("❌ Failed to update document status:", updateError);
           throw new Error(`Failed to update document status: ${updateError.message}`);
         }
-        
+
         console.log(`✅ Document ${documentId} status updated to READY with metadata:`, ragMetadata);
 
         // Credits: deduct based on number of chunks (if available)
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest) {
       console.error("Error details:", processingError.message, processingError.stack);
 
       const errorMessage = processingError.message || "Failed to process document";
-      
+
       // Update document status to error
       await supabase
         .from("pdf_documents")

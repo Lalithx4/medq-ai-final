@@ -1,6 +1,6 @@
 import { db } from "@/server/db";
 import { generateId } from "ai";
-import { getCreditCost } from "@/lib/pricing/plans";
+import { getCreditCost } from "@/lib/credits/costs";
 import { isCreditSystemEnabled } from "./credit-config";
 
 export class CreditService {
@@ -14,7 +14,7 @@ export class CreditService {
   ): Promise<boolean> {
     // If credit system is disabled, always allow
     if (!isCreditSystemEnabled()) {
-      console.log("[CreditService] Credit system disabled, allowing operation");
+      // console.log("[CreditService] Credit system disabled, allowing operation");
       return true;
     }
 
@@ -45,7 +45,7 @@ export class CreditService {
   ): Promise<{ success: boolean; remainingCredits?: number; error?: string }> {
     // If credit system is disabled, skip deduction
     if (!isCreditSystemEnabled()) {
-      console.log("[CreditService] Credit system disabled, skipping deduction");
+      // console.log("[CreditService] Credit system disabled, skipping deduction");
       return { success: true, remainingCredits: 999999 };
     }
 
@@ -139,19 +139,19 @@ export class CreditService {
   static async getBalance(userId: string): Promise<number> {
     // If credit system is disabled, return unlimited credits
     if (!isCreditSystemEnabled()) {
-      console.log("[CreditService] Credit system disabled, returning unlimited credits");
+      // console.log("[CreditService] Credit system disabled, returning unlimited credits");
       return 999999;
     }
 
     try {
-      console.log(`[CreditService.getBalance] Fetching balance for user: ${userId}`);
+      // console.log(`[CreditService.getBalance] Fetching balance for user: ${userId}`);
       const user = await db.user.findUnique({
         where: { id: userId },
         select: { credits: true },
       });
 
       const balance = user?.credits ?? 0;
-      console.log(`[CreditService.getBalance] User ${userId} has ${balance} credits`);
+      // console.log(`[CreditService.getBalance] User ${userId} has ${balance} credits`);
       return balance;
     } catch (err) {
       console.error("[CreditService.getBalance] DB error, returning 0.", err);
@@ -167,16 +167,16 @@ export class CreditService {
     limit: number = 50
   ): Promise<any[]> {
     try {
-      console.log(`[CreditService.getTransactionHistory] Fetching for user: ${userId}, limit: ${limit}`);
-      
+      // console.log(`[CreditService.getTransactionHistory] Fetching for user: ${userId}, limit: ${limit}`);
+
       const transactions = await db.creditTransaction.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
         take: limit,
       });
-      
-      console.log(`[CreditService.getTransactionHistory] Found ${transactions.length} transactions`);
-      
+
+      // console.log(`[CreditService.getTransactionHistory] Found ${transactions.length} transactions`);
+
       return transactions;
     } catch (error) {
       console.error("[CreditService.getTransactionHistory] Error:", error);

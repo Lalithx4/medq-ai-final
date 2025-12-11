@@ -3,7 +3,7 @@
  * Run this once to create the required storage bucket
  */
 
-import { getSupabaseClient } from '@/lib/supabaseClient';
+import { getSupabaseClient } from '@/lib/db/supabase-client';
 
 async function setupStorage() {
   console.log('🚀 Setting up Supabase Storage...\n');

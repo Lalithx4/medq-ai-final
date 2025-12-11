@@ -26,7 +26,7 @@ export class PubMedService {
   private fallbackService: FallbackResearchService;
   private rateLimiter;
 
-  constructor(email: string = 'research@biodocsai.com', apiKey?: string) {
+  constructor(email: string = 'research@medq.ai', apiKey?: string) {
     this.email = email;
     this.apiKey = apiKey || process.env.NCBI_API_KEY;
     this.fallbackService = new FallbackResearchService();
@@ -168,7 +168,7 @@ export class PubMedService {
         fetch(`${searchUrl}?${params}`, {
           headers: {
             'Accept': 'application/json',
-            'User-Agent': 'BioDocsAI/1.0 (contact: research@biodocsai.com)'
+            'User-Agent': 'MedQAI/1.0 (contact: research@medq.ai)'
           }
         })
       );
@@ -240,7 +240,7 @@ export class PubMedService {
             fetch(`${fetchUrl}?${params}`, {
               headers: {
                 'Accept': 'application/json',
-                'User-Agent': 'BioDocsAI/1.0 (contact: research@biodocsai.com)'
+                'User-Agent': 'MedQAI/1.0 (contact: research@medq.ai)'
               }
             })
           );
